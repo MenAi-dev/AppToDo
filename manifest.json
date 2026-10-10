@@ -1,10 +1,10 @@
 {
-  "id": "/AppToDo/",
+  "id": "/",
   "name": "Momo Tâches",
   "short_name": "Momo Tâches",
   "description": "Liste de tâches simple, utilisable hors ligne",
-  "start_url": "/AppToDo/index.html",
-  "scope": "/AppToDo/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",

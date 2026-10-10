@@ -1,7 +1,7 @@
 // Réglages : apparence (thème, couleur, taille du texte), prénom, vibrations, objectif, données, application.
 // Tout est mémorisé sur l'appareil (clé « todoTheme »). js/precoce.js (dans <head>) pose déjà le thème avant l'affichage.
 const THEME_CLE = 'todoTheme';
-const VERSION_APP = 'v22';
+const VERSION_APP = 'v23';
 const ACCENTS = [
   ['emeraude','Émeraude','#059669'], ['bleu','Bleu','#0A84FF'], ['vert','Vert','#30D158'], ['violet','Violet','#BF5AF2'],
   ['orange','Orange','#FF9F0A'], ['rose','Rose','#FF375F'], ['turquoise','Turquoise','#32ADE6']
