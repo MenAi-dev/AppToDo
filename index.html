@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Momo Tâches</title>
+<script src="js/precoce.js"></script>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Momo Tâches">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/modals.css">
+<link rel="stylesheet" href="css/oneui.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>Mes tâches</h1>
+      <p id="dateJour"></p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-icone" id="btnReglages" type="button" aria-label="Réglages">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="bandeau-rappels" id="bandeauRappels" hidden></div>
+
+  <div class="resume" id="resume" data-etat="ok">
+    <div class="resume-haut">
+      <div>
+        <div class="label">Restantes</div>
+        <div class="valeur" id="resteNb">0</div>
+      </div>
+      <div class="resume-droite">
+        <div id="resumeTotal">0 tâche</div>
+        <div class="retard-info" id="resumeRetard" hidden></div>
+      </div>
+    </div>
+    <div class="barre"><div class="barre-fill" id="barreFill"></div></div>
+    <div class="message-etat" id="resumeMessage"></div>
+  </div>
+
+  <form class="ajout" id="formAjout" autocomplete="off">
+    <div class="ajout-ligne">
+      <input id="inputTitre" type="text" placeholder="Nouvelle tâche… ex. Appeler Paul demain #perso" maxlength="140" enterkeyhint="done" aria-label="Nouvelle tâche">
+      <button type="submit" class="btn-plus" aria-label="Ajouter la tâche">+</button>
+    </div>
+    <div class="ajout-options">
+      <label class="chip" id="chipDate">
+        <span id="chipDateTxt">📅 Date</span>
+        <input type="date" id="inputDate" aria-label="Date d'échéance">
+      </label>
+      <button type="button" class="chip chip-x" id="effacerDate" hidden aria-label="Retirer la date">✕</button>
+      <button type="button" class="chip" id="chipImportant">☆ Important</button>
+      <button type="button" class="chip" id="chipRepeter">🔁 Répéter</button>
+      <button type="button" class="chip" id="chipCat">🏷 Catégorie</button>
+    </div>
+    <div class="apercu" id="apercu" hidden></div>
+  </form>
+
+  <div class="section-tete">
+    <h2 class="section-titre" id="titreVue">À faire</h2>
+    <button class="btn-recherche" id="btnRecherche" type="button" aria-label="Rechercher une tâche">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+    </button>
+  </div>
+  <div class="zone-recherche" id="zoneRecherche" hidden>
+    <input type="search" id="inputRecherche" placeholder="Rechercher (titre, étape, catégorie)…" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button type="button" id="rechercheFermer" aria-label="Fermer la recherche">✕</button>
+  </div>
+
+  <div class="filtres-cat" id="filtresCat" hidden></div>
+
+  <div id="liste"></div>
+
+  <footer>Fonctionne hors ligne · Données enregistrées sur cet appareil</footer>
+</div>
+
+<!-- Barre de navigation flottante -->
+<nav class="nav" id="nav" aria-label="Sections">
+  <button class="nav-btn actif" data-filtre="afaire" type="button"><span class="nav-fond"></span><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/></svg><span class="nav-txt">À faire <span class="nav-n" id="navAFaire">0</span></span></button>
+  <button class="nav-btn" data-filtre="faites" type="button"><span class="nav-fond"></span><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg><span class="nav-txt">Faites <span class="nav-n" id="navFaites">0</span></span></button>
+  <button class="nav-btn" data-filtre="recurrentes" type="button"><span class="nav-fond"></span><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/></svg><span class="nav-txt">Répétées <span class="nav-n" id="navRec"></span></span></button>
+  <button class="nav-btn" data-filtre="analyse" type="button"><span class="nav-fond"></span><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-7"/></svg><span class="nav-txt">Analyse</span></button>
+  <button class="nav-btn" data-filtre="journal" type="button"><span class="nav-fond"></span><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="nav-txt">Journal</span></button>
+</nav>
+
+<!-- Modifier une tâche -->
+<div class="overlay" id="overlayEdit">
+  <div class="modal"><div class="sheet-grabber"></div>
+    <h3>Modifier la tâche</h3>
+    <div class="sub">Change le texte, la date, l'importance, la répétition, la catégorie, les sous-tâches ou la note.</div>
+    <div class="champ">
+      <label for="editTitre">Tâche</label>
+      <input id="editTitre" type="text" maxlength="140">
+    </div>
+    <div class="champ">
+      <label for="editDate">Date (facultatif)</label>
+      <input id="editDate" type="date">
+    </div>
+    <div class="champ" id="champHeure">
+      <label for="editHeure">Rappel (facultatif)</label>
+      <div class="rappel-ligne">
+        <input id="editHeure" type="time" aria-label="Heure du rappel">
+        <div class="rappel-avance" id="blocAvance" hidden>
+          <input id="editAvance" type="number" inputmode="numeric" min="0" max="1440" aria-label="Minutes d'avance">
+          <span>min avant</span>
+        </div>
+      </div>
+      <div class="aide" id="aideRappel"></div>
+    </div>
+    <div class="champ">
+      <label for="editImportant">Importance</label>
+      <select id="editImportant">
+        <option value="0">Normale</option>
+        <option value="1">Importante ★</option>
+      </select>
+    </div>
+    <div class="champ">
+      <label for="editRepeter">Répétition</label>
+      <select id="editRepeter">
+        <option value="">Jamais</option>
+        <option value="jour">Chaque jour</option>
+        <option value="semaine">Chaque semaine</option>
+        <option value="mois">Chaque mois</option>
+      </select>
+    </div>
+    <div class="champ">
+      <label for="editCat">Catégorie</label>
+      <input id="editCat" type="text" list="listeCats" maxlength="24" placeholder="Aucune" autocomplete="off">
+      <datalist id="listeCats"></datalist>
+    </div>
+    <div class="champ">
+      <label for="editSousNouvelle">Sous-tâches</label>
+      <div class="sous-liste" id="editSous"></div>
+      <input id="editSousNouvelle" type="text" maxlength="140" placeholder="Ajouter une sous-tâche…" enterkeyhint="done" autocomplete="off">
+    </div>
+    <div class="champ">
+      <label for="editNote">Note</label>
+      <textarea id="editNote" rows="3" maxlength="1000" placeholder="Détails, adresse, lien…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-annuler" id="editAnnuler" type="button">Annuler</button>
+      <button class="btn-valider" id="editValider" type="button">Enregistrer</button>
+    </div>
+    <div class="modal-delete-link"><button id="editSuppr" type="button">Supprimer cette tâche</button></div>
+  </div>
+</div>
+
+<!-- Réglages -->
+<div class="overlay" id="overlayReglages">
+  <div class="modal"><div class="sheet-grabber"></div>
+    <h3>Réglages</h3>
+    <div class="sub">Tout reste sur cet appareil.</div>
+
+    <div class="reglage-titre">Profil</div>
+    <div class="champ champ-seul">
+      <input id="prefPrenom" type="text" maxlength="30" placeholder="Ton prénom (facultatif)" autocomplete="off" aria-label="Prénom">
+    </div>
+
+    <div class="reglage-titre">Apparence</div>
+    <div class="theme-modes" role="group" aria-label="Thème">
+      <button class="theme-mode" data-mode="auto" type="button">Auto</button>
+      <button class="theme-mode" data-mode="clair" type="button">Clair</button>
+      <button class="theme-mode" data-mode="sombre" type="button">Sombre</button>
+    </div>
+    <div class="theme-titre">Couleur d'accent</div>
+    <div class="theme-accents" id="themeAccents" role="group" aria-label="Couleur d'accent"></div>
+    <div class="theme-titre">Taille du texte</div>
+    <div class="theme-modes" role="group" aria-label="Taille du texte">
+      <button class="theme-mode reg-texte" data-texte="normal" type="button">Normal</button>
+      <button class="theme-mode reg-texte" data-texte="grand" type="button">Grand</button>
+    </div>
+
+    <div class="reglage-titre">Suivi</div>
+    <button class="ligne-reglage ligne-bouton" id="btnObjectifReglage" type="button">
+      <span><b>Objectif quotidien</b><small id="infoObjectif"></small></span><span class="chevron" aria-hidden="true">›</span>
+    </button>
+    <label class="ligne-reglage">
+      <span><b>Vibrations</b><small>Au glissement et à la validation d'une tâche</small></span>
+      <input type="checkbox" class="interrupteur" id="prefVibrations">
+    </label>
+
+    <div class="reglage-titre">Verrouillage</div>
+    <div class="sub sub-reglage" id="infoVerrou"></div>
+    <div class="modal-actions col compact">
+      <button class="btn-annuler" id="btnPinDefinir" type="button">Définir un code PIN</button>
+      <button class="btn-annuler danger" id="btnPinRetirer" type="button" hidden>Retirer le code</button>
+    </div>
+
+    <div class="reglage-titre">Sauvegarde et données</div>
+    <div class="sub sub-reglage">Tes tâches sont stockées dans ce navigateur. Exporte-les de temps en temps (changement de téléphone, données effacées…). Les tâches archivées restent comptées dans l'Analyse.</div>
+    <div class="modal-actions col compact">
+      <button class="btn-valider" id="btnExport" type="button">Exporter mes tâches</button>
+      <button class="btn-annuler" id="btnExportChiffre" type="button">Exporter (chiffré par mot de passe)</button>
+      <button class="btn-annuler" id="btnImport" type="button">Importer une sauvegarde</button>
+    </div>
+    <div class="zone-secours" id="zoneSecours" hidden>
+      <div class="sub sub-reglage">Une restauration a remplacé tes tâches. Tu peux revenir à l'état d'avant.</div>
+      <button class="btn-annuler btn-large" id="btnRecupAvantImport" type="button">Récupérer l'état d'avant la restauration</button>
+    </div>
+    <div class="modal-delete-link"><button id="btnHistorique" type="button" hidden>Effacer les tâches archivées</button></div>
+
+    <div class="reglage-titre">Application</div>
+    <div class="modal-actions col compact">
+      <button class="btn-annuler" id="btnMajApp" type="button">Mettre à jour l'application</button>
+      <button class="btn-annuler" id="btnResetPrefs" type="button">Réinitialiser l'apparence</button>
+    </div>
+    <div class="version-app">Version <span id="versionApp"></span></div>
+
+    <div class="modal-actions"><button class="btn-valider" id="reglagesFermer" type="button">Terminé</button></div>
+  </div>
+</div>
+
+<!-- Objectif quotidien -->
+<div class="overlay" id="overlayObjectif">
+  <div class="modal"><div class="sheet-grabber"></div>
+    <h3>Objectif quotidien</h3>
+    <div class="sub">Nombre de tâches que tu veux terminer chaque jour. Il sert à colorer la carte de chaleur et à suivre ta progression.</div>
+    <div class="objectif-stepper">
+      <button type="button" id="objMoins" aria-label="Diminuer">−</button>
+      <input id="objValeur" type="number" inputmode="numeric" min="1" max="50" aria-label="Tâches par jour">
+      <button type="button" id="objPlus" aria-label="Augmenter">+</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-annuler" id="objAnnuler" type="button">Annuler</button>
+      <button class="btn-valider" id="objValider" type="button">Enregistrer</button>
+    </div>
+    <div class="modal-delete-link"><button id="objRetirer" type="button">Retirer l'objectif</button></div>
+  </div>
+</div>
+
+<!-- Saisie d'un mot de passe ou d'un code PIN -->
+<div class="overlay" id="overlaySecret">
+  <div class="modal"><div class="sheet-grabber"></div>
+    <h3 id="secretTitre"></h3>
+    <div class="sub" id="secretSub"></div>
+    <div class="champ">
+      <label for="secretInput" id="secretLabel"></label>
+      <input type="password" id="secretInput" autocomplete="off">
+    </div>
+    <div class="champ" id="secretChamp2" hidden>
+      <label for="secretInput2">Confirme la saisie</label>
+      <input type="password" id="secretInput2" autocomplete="off">
+    </div>
+    <div class="erreur-champ" id="secretErreur" role="alert"></div>
+    <div class="modal-actions">
+      <button class="btn-annuler" id="btnAnnulerSecret" type="button">Annuler</button>
+      <button class="btn-valider" id="btnValiderSecret" type="button">Valider</button>
+    </div>
+  </div>
+</div>
+
+<!-- Écran de verrouillage -->
+<div class="ecran-verrou" id="ecranVerrou" role="dialog" aria-modal="true" aria-labelledby="verrouTitre">
+  <div class="verrou-boite">
+    <div class="verrou-icone" aria-hidden="true">🔒</div>
+    <h2 id="verrouTitre">Mes tâches</h2>
+    <div class="sub">Entre ton code PIN</div>
+    <input type="password" id="verrouInput" inputmode="numeric" autocomplete="off" maxlength="8" aria-label="Code PIN">
+    <div class="erreur-champ" id="verrouErreur" role="alert"></div>
+    <button type="button" class="btn-valider verrou-btn" id="btnDeverrouiller">Déverrouiller</button>
+    <button type="button" class="lien-discret" id="btnCodeOublie">Code oublié ?</button>
+  </div>
+</div>
+
+<input type="file" id="fichierImport" accept="application/json,.json" hidden>
+<button class="fab" id="fab" type="button" aria-label="Ajouter une tâche"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/helpers.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/journal.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/rappels.js"></script>
+<script src="js/render.js"></script>
+<script src="js/recurrentes.js"></script>
+<script src="js/events.js"></script>
+<script src="js/gestes.js"></script>
+<script src="js/reglages.js"></script>
+<script src="js/securite.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
