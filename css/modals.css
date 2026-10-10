@@ -1,0 +1,72 @@
+  .overlay{
+    position:fixed; inset:0; background:var(--fond-modal);
+    -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+    display:none; align-items:flex-end; justify-content:center; z-index:50;
+  }
+  @media(min-width:640px){ .overlay{align-items:center; padding:20px;} }
+  .overlay.actif{display:flex;}
+  .modal{
+    background:var(--noir-2); border:1px solid var(--ligne); border-top:none;
+    border-radius:24px 24px 0 0;
+    padding:10px 22px calc(28px + env(safe-area-inset-bottom)); width:100%; max-width:480px;
+    max-height:90vh; overflow-y:auto;
+  }
+  @media(min-width:640px){ .modal{border:1px solid var(--ligne); border-radius:var(--rayon); max-width:360px; padding:26px 24px;} }
+  .sheet-grabber{width:36px; height:5px; border-radius:3px; background:var(--ligne); margin:0 auto 18px;}
+  @media(min-width:640px){ .sheet-grabber{display:none;} }
+  .overlay.actif .modal{animation: sheetUp .38s var(--spring) both;}
+  @media(min-width:640px){ .overlay.actif .modal{animation: modalPop .28s var(--spring) both;} }
+  @keyframes sheetUp{ from{ opacity:0; transform:translateY(100%); } to{ opacity:1; transform:translateY(0); } }
+  @keyframes modalPop{ from{ opacity:0; transform:scale(.94) translateY(6px); } to{ opacity:1; transform:scale(1) translateY(0); } }
+
+  .modal h3{font-size:1.05rem; font-weight:700; margin:0 0 4px;}
+  .modal .sub{color:var(--gris); font-size:0.8rem; margin-bottom:18px; line-height:1.45;}
+  .champ{margin-bottom:14px;}
+  .champ label{display:block; font-size:0.78rem; color:var(--gris); margin-bottom:6px;}
+  .champ input, .champ select, .champ textarea{
+    width:100%; background:var(--noir-3); border:none; color:var(--texte);
+    padding:12px 14px; border-radius:var(--rayon-sm); font-size:0.95rem;
+    color-scheme:var(--cs);
+  }
+  .champ input:focus, .champ select:focus, .champ textarea:focus{outline:2px solid var(--bleu); outline-offset:1px;}
+  .modal-actions{display:flex; gap:10px; margin-top:20px;}
+  .modal-actions.col{flex-direction:column;}
+  .modal-actions button{
+    flex:1; padding:12px 0; border-radius:980px; font-size:0.9rem; font-weight:600; cursor:pointer; border:none;
+    transition:transform .15s var(--spring), background .15s ease;
+  }
+  .modal-actions button:active{transform:scale(.97);}
+  .btn-annuler{background:var(--noir-3); color:var(--texte);}
+  .btn-valider{background:var(--bleu); color:var(--blanc);}
+  .btn-valider:hover{background:var(--bleu-clair);}
+  .modal-delete-link{margin-top:16px; text-align:center;}
+  .modal-delete-link button{background:none; border:none; color:var(--rouge); font-size:0.82rem; cursor:pointer;}
+
+  /* --- Sous-tâches dans la modale --- */
+  .sous-liste{display:flex; flex-direction:column; gap:8px; margin-bottom:8px; max-height:32vh; overflow-y:auto;}
+  .sous-liste:empty{display:none;}
+  .sous-edit{display:flex; align-items:center; gap:8px;}
+  .sous-edit input{flex:1; min-width:0; width:auto;}
+  .sous-coche-edit{
+    width:22px; height:22px; border-radius:50%; border:2px solid var(--gris); background:none; padding:0;
+    flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .sous-coche-edit.fait{background:var(--bleu); border-color:var(--bleu);}
+  .sous-coche-edit.fait::after{
+    content:''; width:5px; height:10px; border:solid var(--blanc); border-width:0 2px 2px 0;
+    transform:rotate(45deg) translate(-1px,-1px);
+  }
+
+  .champ textarea{resize:none; min-height:84px; line-height:1.4; font-family:inherit;}
+
+  .champ input:disabled{opacity:.45;}
+
+  .rappel-ligne{display:flex; align-items:center; gap:10px;}
+  .rappel-ligne > input{flex:1; min-width:0;}
+  .rappel-avance{display:flex; align-items:center; gap:8px; color:var(--gris); font-size:0.85rem; white-space:nowrap;}
+  .rappel-avance input{width:72px; text-align:center;}
+  .aide{margin-top:8px; font-size:0.74rem; line-height:1.4; color:var(--gris);}
+  .aide:empty{display:none;}
+
+  .notif-actions{margin-top:10px;}
+  #overlayDonnees .theme-titre:first-of-type{margin-top:0;}
