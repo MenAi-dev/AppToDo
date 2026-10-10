@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Momo Tâches",
-  "short_name": "Momo Tâches",
+  "name": "Tâches",
+  "short_name": "Tâches",
   "description": "Liste de tâches simple, utilisable hors ligne",
   "start_url": "/",
   "scope": "/",
