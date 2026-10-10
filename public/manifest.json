@@ -1,8 +1,9 @@
 {
-  "name": "Mes tâches",
-  "short_name": "Tâches",
-  "description": "To-do list simple, utilisable hors ligne",
-  "start_url": "./index.html",
+  "id": "/AppToDo/",
+  "name": "Momo Tâches",
+  "short_name": "Momo Tâches",
+  "description": "Liste de tâches simple, utilisable hors ligne",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#000000",
