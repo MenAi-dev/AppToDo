@@ -4,7 +4,7 @@ let filtreCat = ''; // catégorie filtrée ('' = toutes)
 const ouvertesNotes = new Set(); // tâches dont la note est dépliée
 const ouverts = new Set(); // tâches dont la checklist est dépliée (état d'affichage, non sauvegardé)
 
-const TITRES_VUE = { afaire:'À faire', faites:'Terminées', recurrentes:'Tâches répétées', analyse:'Analyse', journal:'Journal' };
+const TITRES_VUE = { afaire:"Aujourd'hui", faites:'Terminées', recurrentes:'Tâches répétées', stock:'Stock', analyse:'Analyse', journal:'Journal' };
 const SVG_COCHE = '<svg viewBox="0 0 24 24"><polyline points="5 12.5 10 17.5 19 7.5"/></svg>';
 
 function trier(a, b){
@@ -57,7 +57,7 @@ function htmlTache(t, termes){
   const chip = sous.length
     ? `<button class="sous-chip${nFaites === sous.length ? ' complet' : ''}" type="button" data-act="sous-voir" aria-expanded="${ouvert}">☑ ${nFaites}/${sous.length} ${ouvert ? '▾' : '▸'}</button>`
     : '';
-  const rep = t.repeter ? `<span class="repet">🔁 ${LIBELLES_REPET[t.repeter]}</span>` : '';
+  const rep = t.repeter ? `<span class="repet" title="${LIBELLES_REPET[t.repeter]}" aria-label="${LIBELLES_REPET[t.repeter]}">🔁</span>` : ''; // icône seule : le rythme se lit dans l'onglet Répétées
   const tag = t.cat ? `<span class="cat-tag" style="--c:${couleurCat(t.cat)}"><i></i>${surligner(t.cat, termes)}</span>` : '';
   // la note se déplie à la main, ou toute seule si la recherche la concerne
   const noteOuverte = !!t.note && (ouvertesNotes.has(t.id) || (termes.length > 0 && termes.some(x => plierTexte(t.note.normalize('NFC')).includes(x))));
@@ -89,16 +89,71 @@ function htmlTache(t, termes){
   </div>`;
 }
 
-function htmlGroupe(titre, liste, cls, actionHtml, termes){
+// Groupes repliables, limités à LIMITE_GROUPE tâches avec « Voir les N autres » : l'écran reste léger même avec beaucoup de tâches.
+// Les groupes repliés sont mémorisés sur l'appareil ; pendant une recherche, tout est affiché.
+const CLE_GROUPES = 'todoGroupes';
+const LIMITE_GROUPE = 5;
+const groupesEtendus = new Set(); // groupes dont on a demandé « Voir les autres » (non sauvegardé)
+// Jours « à venir » au-delà de demain : repliés par défaut, sauf si on les a ouverts (groupesOuverts).
+// Les autres groupes sont dépliés par défaut, sauf si on les a repliés (groupesReplies).
+const lireSet = l => new Set(Array.isArray(l) ? l.filter(x => typeof x === 'string') : []);
+const [groupesReplies, groupesOuverts] = (() => {
+  try{
+    const d = JSON.parse(localStorage.getItem(CLE_GROUPES) || '[]');
+    return Array.isArray(d) ? [lireSet(d), new Set()] : [lireSet(d.replies), lireSet(d.ouverts)]; // ancien format : simple liste
+  }catch(_){ return [new Set(), new Set()]; }
+})();
+function sauverGroupes(){
+  try{ localStorage.setItem(CLE_GROUPES, JSON.stringify({ replies:[...groupesReplies], ouverts:[...groupesOuverts] })); }catch(_){}
+}
+const jourParDefautReplie = cle => cle.startsWith('j-') && cle.slice(2) > ajouterJours(auj(), 1);
+const groupeReplie = cle => groupesReplies.has(cle) || (jourParDefautReplie(cle) && !groupesOuverts.has(cle));
+function basculerGroupe(cle){
+  if(groupeReplie(cle)){ groupesReplies.delete(cle); groupesOuverts.add(cle); }
+  else { groupesReplies.add(cle); groupesOuverts.delete(cle); }
+  sauverGroupes();
+}
+
+// cle : identifiant du groupe (repliable) ; sans cle ou pendant une recherche : affichage complet
+function htmlGroupe(titre, liste, cls, actionHtml, termes, cle){
   if(!liste.length) return '';
-  return `<div class="groupe"><div class="groupe-titre ${cls||''}"><span>${titre}</span>${actionHtml||''}</div>
-    <div class="groupe-liste">${liste.map(t => htmlTache(t, termes)).join('')}</div></div>`;
+  const repliable = !!cle && !(termes && termes.length);
+  const replie = repliable && groupeReplie(cle);
+  const etendu = !repliable || groupesEtendus.has(cle);
+  const visibles = etendu ? liste : liste.slice(0, LIMITE_GROUPE);
+  const reste = liste.length - visibles.length;
+  const entete = repliable
+    ? `<button class="groupe-toggle" type="button" data-gtoggle="${cle}" aria-expanded="${!replie}"><span class="chevron${replie ? ' ferme' : ''}">▾</span><span>${titre}</span><span class="groupe-nb">${liste.length}</span></button>`
+    : `<span>${titre}</span>`;
+  let corps = '';
+  if(!replie){
+    corps = `<div class="groupe-liste">${visibles.map(t => htmlTache(t, termes)).join('')}</div>`;
+    if(repliable && liste.length > LIMITE_GROUPE){
+      corps += `<button class="voir-plus" type="button" data-gplus="${cle}">${etendu ? 'Réduire ▴' : `Voir les ${reste} autre${reste>1?'s':''} ▾`}</button>`;
+    }
+  }
+  return `<div class="groupe"><div class="groupe-titre ${cls||''}">${entete}${replie ? '' : (actionHtml||'')}</div>${corps}</div>`;
+}
+
+// « Demain · mer. 4 nov. », « Jeudi 5 nov. »
+function titreJour(iso){
+  const d = new Date(iso + 'T12:00:00');
+  const court = d.toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'short' }).replace(/\./g, '');
+  if(iso === ajouterJours(auj(), 1)) return `Demain · ${court}`;
+  const long = d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'short' }).replace(/\./g, '');
+  return long.charAt(0).toUpperCase() + long.slice(1);
 }
 
 function rendre(){
   majRappels();
   const visibles = taches.filter(t=>!t.archive); // les tâches archivées ne comptent que dans l'analyse
-  const restantes = visibles.filter(t=>!t.fait);
+  // STOCK AUTOMATIQUE : « À faire » ne montre que le jour même (et les retards, pour ne rien perdre).
+  // Tout le reste (demain, plus tard, sans date, mis de côté à la main) est rangé au Stock et revient seul le jour venu.
+  // Les rappels, eux, continuent de sonner à l'heure prévue.
+  const demain = ajouterJours(auj(), 1);
+  const auStock = visibles.filter(t => !t.fait && (t.stock || !t.date || t.date > auj()));
+  const idsStock = new Set(auStock.map(t => t.id));
+  const restantes = visibles.filter(t => !t.fait && !idsStock.has(t.id));
   const faites = visibles.filter(t=>t.fait);
   const aujourdhui = auj();
   const enRetard = restantes.filter(t=>t.date && t.date < aujourdhui);
@@ -108,31 +163,44 @@ function rendre(){
     new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' })
   ));
   // La carte résumé change de couleur selon l'état : retard (alerte), tout fait (vert), sinon couleur d'accent
-  const etat = enRetard.length ? 'retard' : (visibles.length && !restantes.length ? 'fini' : 'ok');
+  // Le chiffre principal ne compte que ce qui est à faire AUJOURD'HUI (en retard + du jour) :
+  // les tâches des jours suivants, surtout répétées, ne doivent pas donner l'impression d'une montagne à faire.
+  const dues = restantes.filter(t => t.date && t.date <= aujourdhui);
+  const nFaitesAuj = compteAujourdhui();
+  const nAvenir = auStock.length;
+  const etat = enRetard.length ? 'retard' : (!dues.length && (nFaitesAuj || restantes.length || auStock.length) ? 'fini' : 'ok');
   $('resume').dataset.etat = etat;
   $('resumeMessage').textContent = enRetard.length
     ? `${enRetard.length} tâche${enRetard.length>1?'s':''} en retard : reporte-${enRetard.length>1?'les':'la'} ou termine-${enRetard.length>1?'les':'la'}.`
-    : etat === 'fini' ? 'Tout est fait, bravo !'
-    : restantes.length ? `${restantes.filter(t=>t.date === aujourdhui).length} pour aujourd'hui · ${restantes.length} au total.` : '';
+    : etat === 'fini' ? (nFaitesAuj ? "Tout est fait pour aujourd'hui, bravo !" : "Rien de prévu aujourd'hui.") : '';
   const nRec = visibles.filter(t=>!t.fait && t.repeter).length;
   $('navRec').textContent = nRec || '';
   $('titreVue').textContent = TITRES_VUE[filtre] || '';
-  $('resteNb').textContent = restantes.length;
-  $('resumeTotal').textContent = `sur ${visibles.length} tâche${visibles.length>1?'s':''}`;
+  $('resteNb').textContent = dues.length;
+  $('resumeTotal').textContent = nAvenir ? `${nAvenir} au stock` : `${restantes.length} en cours`;
   const r = $('resumeRetard');
   r.hidden = !enRetard.length;
   r.textContent = `${enRetard.length} en retard`;
-  const pct = visibles.length ? Math.round(faites.length / visibles.length * 100) : 0;
+  // Barre = avancement de la journée (terminées aujourd'hui / terminées + restantes du jour)
+  const totalJour = nFaitesAuj + dues.length;
+  const pct = totalJour ? Math.round(nFaitesAuj / totalJour * 100) : 0;
   $('barreFill').style.width = pct + '%';
-  $('barreFill').classList.toggle('complet', visibles.length > 0 && pct === 100);
-  $('navAFaire').textContent = restantes.length;
+  $('barreFill').classList.toggle('complet', totalJour > 0 && pct === 100);
+  $('navAFaire').textContent = dues.length || '';
   $('navFaites').textContent = faites.length;
+  $('stockNb').textContent = auStock.length || '';
+  $('btnStock').classList.toggle('actif', filtre === 'stock');
+  // La courbe d'évolution n'apparaît que sur l'accueil
+  // Accueil épuré : résumé, courbe et saisie rapide uniquement sur « Aujourd'hui »
+  $('resume').hidden = $('formAjout').hidden = filtre !== 'afaire';
+  $('courbe').hidden = filtre !== 'afaire';
+  if(filtre === 'afaire') rendreCourbe();
 
   // Filtre par catégorie (ne s'affiche que s'il existe au moins une catégorie)
   const cats = toutesCategories(visibles);
   if(filtreCat && !cats.some(c => cleCat(c) === cleCat(filtreCat))) filtreCat = '';
   const zoneCat = $('filtresCat');
-  if(!['afaire', 'faites'].includes(filtre) || !cats.length){
+  if(!['afaire', 'faites', 'stock'].includes(filtre) || !cats.length){
     zoneCat.hidden = true;
   } else {
     zoneCat.hidden = false;
@@ -150,10 +218,11 @@ function rendre(){
   const termes = termesRecherche();
   if(termes.length){ // recherche : résultats « À faire » et « Terminées », quel que soit l'onglet
     const trouvees = visibles.filter(t => dansFiltre(t) && correspond(t, termes));
-    const trouveesA = trouvees.filter(t=>!t.fait).sort(trier);
+    const trouveesA = trouvees.filter(t=>!t.fait && !idsStock.has(t.id)).sort(trier);
+    const trouveesS = trouvees.filter(t=>!t.fait && idsStock.has(t.id)).sort(trier);
     const trouveesF = trouvees.filter(t=>t.fait).sort((a,b)=>(b.faitLe||0)-(a.faitLe||0));
     html = trouvees.length
-      ? htmlGroupe(`À faire · ${trouveesA.length}`, trouveesA, '', '', termes) + htmlGroupe(`Terminées · ${trouveesF.length}`, trouveesF, '', '', termes)
+      ? htmlGroupe(`À faire · ${trouveesA.length}`, trouveesA, '', '', termes) + htmlGroupe(`En stock · ${trouveesS.length}`, trouveesS, '', '', termes) + htmlGroupe(`Terminées · ${trouveesF.length}`, trouveesF, '', '', termes)
       : `<div class="vide"><b>Aucun résultat</b>Rien ne correspond à « ${echapper(requete.trim())} ».</div>`;
     $('liste').innerHTML = html;
     return;
@@ -161,7 +230,7 @@ function rendre(){
   if(filtre === 'afaire'){
     if(!restantes.length){
       html = visibles.length
-        ? '<div class="vide"><b>Tout est fait 🎉</b>Profite, ou ajoute une nouvelle tâche.</div>'
+        ? `<div class="vide"><b>${auStock.length ? "Rien pour aujourd'hui" : 'Tout est fait'}</b>${auStock.length ? `${auStock.length} tâche${auStock.length>1?'s':''} au stock, elle${auStock.length>1?'s arrivent':' arrive'} ici le jour venu.` : 'Profite, ou ajoute une nouvelle tâche.'}</div>`
         : '<div class="vide"><b>Aucune tâche</b>Écris ta première tâche ci-dessus.</div>';
     } else if(!restantesL.length){
       html = `<div class="vide"><b>Rien à faire dans « ${echapper(filtreCat)} »</b>Choisis « Toutes » pour tout revoir.</div>`;
@@ -170,11 +239,15 @@ function rendre(){
       const retardees = trie.filter(t=>t.date && t.date < aujourdhui);
       const actionRetard = retardees.length > 1
         ? '<button class="lien-discret neutre" type="button" data-act="reporter-tout">Tout reporter à aujourd\'hui</button>' : '';
-      html += htmlGroupe('En retard', retardees, 'retard', actionRetard);
-      html += htmlGroupe("Aujourd'hui", trie.filter(t=>t.date === aujourdhui));
-      html += htmlGroupe('À venir', trie.filter(t=>t.date && t.date > aujourdhui));
-      html += htmlGroupe('Sans date', trie.filter(t=>!t.date));
+      html += htmlGroupe('En retard', retardees, 'retard', actionRetard, null, 'retard');
+      html += htmlGroupe("Aujourd'hui", trie.filter(t=>t.date === aujourdhui), '', '', null, 'auj');
     }
+    // On oublie les jours passés dans les groupes mémorisés
+    let nettoye = false;
+    [groupesReplies, groupesOuverts].forEach(s => s.forEach(k => { if(k.startsWith('j-') && k.slice(2) <= aujourdhui){ s.delete(k); nettoye = true; } }));
+    if(nettoye) sauverGroupes();
+  } else if(filtre === 'stock'){
+    html = htmlStock(auStock, auStock.filter(dansFiltre), demain);
   } else {
     if(!faites.length){
       html = '<div class="vide"><b>Rien ici</b>Les tâches terminées apparaîtront ici.</div>';
@@ -182,9 +255,7 @@ function rendre(){
       html = `<div class="vide"><b>Rien de terminé dans « ${echapper(filtreCat)} »</b>Choisis « Toutes » pour tout revoir.</div>`;
     } else {
       const trie = faitesL.slice().sort((a,b)=>(b.faitLe||0)-(a.faitLe||0));
-      html = `<div class="groupe"><div class="groupe-titre"><span>${faitesL.length} terminée${faitesL.length>1?'s':''}</span>
-        <button class="lien-discret" type="button" data-act="vider">Tout archiver</button></div>
-        <div class="groupe-liste">${trie.map(htmlTache).join('')}</div></div>`;
+      html = htmlGroupe(`Terminées`, trie, '', '<button class="lien-discret" type="button" data-act="vider">Tout archiver</button>', null, 'faites');
     }
   }
   $('liste').innerHTML = html;
@@ -192,7 +263,7 @@ function rendre(){
 
 function basculerFiltre(nom){
   filtre = nom;
-  const vueListe = nom === 'afaire' || nom === 'faites'; // la recherche ne concerne que les listes de tâches
+  const vueListe = nom === 'afaire' || nom === 'faites' || nom === 'stock'; // la recherche ne concerne que les listes de tâches
   $('btnRecherche').hidden = !vueListe;
   if(!vueListe){
     requete = ''; $('inputRecherche').value = '';

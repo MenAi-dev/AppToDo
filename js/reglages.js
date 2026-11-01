@@ -1,12 +1,12 @@
 // Réglages : apparence (thème, couleur, taille du texte), prénom, vibrations, objectif, données, application.
 // Tout est mémorisé sur l'appareil (clé « todoTheme »). js/precoce.js (dans <head>) pose déjà le thème avant l'affichage.
 const THEME_CLE = 'todoTheme';
-const VERSION_APP = 'v23';
+const VERSION_APP = 'v29';
 const ACCENTS = [
   ['emeraude','Émeraude','#059669'], ['bleu','Bleu','#0A84FF'], ['vert','Vert','#30D158'], ['violet','Violet','#BF5AF2'],
   ['orange','Orange','#FF9F0A'], ['rose','Rose','#FF375F'], ['turquoise','Turquoise','#32ADE6']
 ];
-const reglagesTheme = { mode:'sombre', accent:'emeraude', texte:'normal', prenom:'', vibrations:true };
+const reglagesTheme = { mode:'sombre', accent:'emeraude', texte:'normal', prenom:'', vibrations:true, ajoutRapide:false };
 
 // Accepte n'importe quoi (stockage modifié, fichier de sauvegarde…) et corrige les valeurs invalides
 function nettoyerReglages(t){
@@ -16,7 +16,8 @@ function nettoyerReglages(t){
     accent: ACCENTS.some(a => a[0] === t.accent) ? t.accent : 'emeraude',
     texte: t.texte === 'grand' ? 'grand' : 'normal',
     prenom: typeof t.prenom === 'string' ? t.prenom.trim().slice(0, 30) : '',
-    vibrations: t.vibrations !== false
+    vibrations: t.vibrations !== false,
+    ajoutRapide: t.ajoutRapide === true // false par défaut : la fiche complète s'ouvre à chaque ajout
   };
 }
 function chargerTheme(){
@@ -53,6 +54,7 @@ function appliquerTheme(){
   const pn = $('prefPrenom');
   if(pn && document.activeElement !== pn) pn.value = reglagesTheme.prenom;
   $('prefVibrations').checked = reglagesTheme.vibrations;
+  $('prefAjoutRapide').checked = reglagesTheme.ajoutRapide;
   if(typeof rendre === 'function' && typeof taches !== 'undefined') rendre(); // met à jour la salutation
 }
 
@@ -96,6 +98,11 @@ function fermerReglages(){ $('overlayReglages').classList.remove('actif'); }
     reglagesTheme.vibrations = e.target.checked;
     enregistrerTheme();
     if(reglagesTheme.vibrations) vibrer(30); // petit essai pour sentir la vibration
+  });
+
+  $('prefAjoutRapide').addEventListener('change', e => {
+    reglagesTheme.ajoutRapide = e.target.checked;
+    enregistrerTheme();
   });
 
   $('btnObjectifReglage').addEventListener('click', () => { fermerReglages(); ouvrirObjectif(); });

@@ -11,7 +11,7 @@ function enregistrerAvanceDefaut(n){
 const avanceDe = t => (t.avance === null || t.avance === undefined) ? avanceDefaut : t.avance;
 const momentDe = t => new Date(t.date + 'T' + t.heure + ':00').getTime();
 const alerteDe = t => momentDe(t) - avanceDe(t) * 60000;
-const rappelsActifs = () => taches.filter(t => !t.fait && !t.archive && t.date && t.heure);
+const rappelsActifs = () => taches.filter(t => !t.fait && !t.archive && !t.stock && t.date && t.heure);
 
 // --- Notifications système ---
 function aideNotification(){

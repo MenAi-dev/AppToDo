@@ -29,6 +29,7 @@ function nettoyerTache(t){
     repeter: REPETITIONS.includes(t.repeter) ? t.repeter : '',
     suiteId: typeof t.suiteId === 'string' ? t.suiteId : '',
     archive: !!t.archive && !!t.fait, // seules les tâches terminées s'archivent
+    stock: !!t.stock && !t.fait, // tâche rangée au stock (hors « À faire » et rappels)
     sous: nettoyerSous(t.sous),
     note: typeof t.note === 'string' ? t.note.replace(/\r\n?/g, '\n').trim().slice(0, MAX_NOTE) : '',
     cat: typeof t.cat === 'string' ? t.cat.replace(/\s+/g, ' ').trim().slice(0,24) : '',

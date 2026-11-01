@@ -9,7 +9,9 @@ const TYPES_JOURNAL = {
   rouvert: { ico:'↺', txt:'Rouverte',  couleur:'var(--orange)' },
   suppr:   { ico:'✕', txt:'Supprimée', couleur:'var(--rouge)' },
   report:  { ico:'→', txt:'Reportée',  couleur:'var(--orange)' },
-  archive: { ico:'▣', txt:'Archivée',  couleur:'var(--gris)' }
+  archive: { ico:'▣', txt:'Archivée',  couleur:'var(--gris)' },
+  stock:   { ico:'▤', txt:'Mise en stock', couleur:'var(--gris)' },
+  destock: { ico:'↥', txt:'Remise à faire', couleur:'var(--bleu)' }
 };
 let journal = []; // { t, a, titre, d } du plus récent au plus ancien
 let filtreJournal = '';

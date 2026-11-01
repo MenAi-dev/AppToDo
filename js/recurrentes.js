@@ -1,7 +1,7 @@
 // Onglet « Répétées » : toutes les tâches qui se répètent, regroupées par rythme.
 // Chaque ligne permet de modifier la tâche ou d'arrêter sa répétition.
 function htmlRecurrentes(){
-  const liste = taches.filter(t => !t.archive && !t.fait && t.repeter);
+  const liste = taches.filter(t => !t.archive && !t.fait && !t.stock && t.repeter);
   if(!liste.length){
     return '<div class="vide"><b>Aucune tâche répétée</b>Touche « 🔁 Répéter » en ajoutant une tâche : elle se recrée toute seule après chaque fois (chaque jour, semaine ou mois).</div>';
   }
@@ -19,6 +19,7 @@ function htmlRecurrentes(){
             <span class="rec-titre">${echapper(t.titre)}</span>
             <span class="rec-meta${enRetard ? ' retard' : ''}">${quand}${tag}</span>
           </button>
+          <button class="pill-report pill-ok" type="button" data-act="rec-stock">Stock</button>
           <button class="pill-report" type="button" data-act="rec-stop">Arrêter</button>
         </div>`;
       }).join('')}</div></div>`;
