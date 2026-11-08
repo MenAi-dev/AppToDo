@@ -218,7 +218,12 @@ function htmlJourHaut(){
 function htmlJourListe(){
   const { plan, horsPlan, jour } = planDuJour();
   if(!jour.length){
-    return `<div class="vide"><b>Journée vide</b>1 grande, 3 moyennes, 5 petites.</div>`;
+    return `<div class="vide"><b>Journée vide</b>1 grande, 3 moyennes, 5 petites.</div>
+      <button class="bloc-pres" type="button" data-act="presentation">
+        <span class="bloc-pres-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></span>
+        <span class="bloc-pres-txt"><b>Découvrir Tâches</b><small>Présentation animée · 57 s</small></span>
+        ${ic('chevron')}
+      </button>`;
   }
   const section = (titre, liste, action, cls, focus) => liste.length ? `<section class="groupe ${cls || ''}"><div class="groupe-titre"><span>${titre}</span><span class="groupe-nb">${liste.length}</span></div>
     <div class="groupe-liste">${liste.map(t => htmlLigne(t, action, focus)).join('')}</div></section>` : '';

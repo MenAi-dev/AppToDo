@@ -73,7 +73,7 @@ function phaseSuivante(auto){
     toast(msg, 'succes');
     try{
       if('Notification' in window && Notification.permission === 'granted'){
-        navigator.serviceWorker && navigator.serviceWorker.getRegistration().then(r => r ? r.showNotification('Momo Tâches', { body:msg, tag:'focus', icon:'icons/icon-192.png' }) : new Notification('Momo Tâches', { body:msg }));
+        navigator.serviceWorker && navigator.serviceWorker.getRegistration().then(r => r ? r.showNotification('Tâches', { body:msg, tag:'focus', icon:'icons/icon-192.png' }) : new Notification('Tâches', { body:msg }));
       }
     }catch(_){}
   }

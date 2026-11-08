@@ -2,7 +2,7 @@
 // marge d'estimation, vibrations, ajout rapide, objectif, données, application.
 // Tout est mémorisé sur l'appareil (clé « todoTheme »). js/precoce.js (dans <head>) pose déjà le thème avant l'affichage.
 const THEME_CLE = 'todoTheme';
-const VERSION_APP = 'v40';
+const VERSION_APP = 'v42';
 const MARGES = [20, 30, 50];
 const heureValide = h => typeof h === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(h);
 // Couleurs système d'Apple (la valeur exacte, claire ou sombre, est dans css/ios.css) : [clé, nom, aperçu]
@@ -96,6 +96,25 @@ function ouvrirReglages(){
   $('overlayReglages').classList.add('actif');
 }
 function fermerReglages(){ $('overlayReglages').classList.remove('actif'); }
+
+// ---------- Présentation animée de l'application (presentation.html, en plein écran) ----------
+function ouvrirPresentation(){
+  fermerReglages();
+  $('presCadre').src = 'presentation.html';
+  $('overlayPresentation').classList.add('actif');
+  vibrer(8);
+}
+function fermerPresentation(){
+  const o = $('overlayPresentation');
+  if(!o.classList.contains('actif')) return;
+  o.classList.remove('actif');
+  setTimeout(() => { $('presCadre').src = 'about:blank'; }, 300); // arrête l'animation
+}
+document.addEventListener('click', e => {
+  if(e.target.closest('[data-act="presentation"]')){ ouvrirPresentation(); return; }
+  if(e.target.closest('[data-pres="fermer"]')) fermerPresentation();
+});
+document.addEventListener('keydown', e => { if(e.key === 'Escape') fermerPresentation(); });
 
 (function(){
   // Pastilles de couleur

@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Momo Tâches</title>
+<title>Tâches</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Momo Tâches">
+<meta name="apple-mobile-web-app-title" content="Tâches">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="stylesheet" href="css/base.css">
@@ -232,11 +232,22 @@
   </div>
 </div>
 
+<!-- Présentation de l'application (presentation.html) -->
+<div class="overlay-pres" id="overlayPresentation" role="dialog" aria-modal="true" aria-label="Présentation de Tâches">
+  <iframe id="presCadre" title="Présentation de Tâches" allow="autoplay"></iframe>
+  <button class="pres-fermer" type="button" data-pres="fermer" aria-label="Fermer la présentation">✕</button>
+</div>
+
 <!-- Réglages -->
 <div class="overlay" id="overlayReglages">
   <div class="modal"><div class="sheet-grabber"></div>
     <h3>Réglages</h3>
     <div class="sub">Tout reste sur cet appareil.</div>
+    <button class="bloc-pres" type="button" data-act="presentation">
+      <span class="bloc-pres-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></span>
+      <span class="bloc-pres-txt"><b>Découvrir Tâches</b><small>Présentation animée · 57 s</small></span>
+      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
 
     <div class="reglage-titre">Profil</div>
     <div class="champ champ-seul">
@@ -371,7 +382,7 @@
 <div class="ecran-verrou" id="ecranVerrou" role="dialog" aria-modal="true" aria-labelledby="verrouTitre">
   <div class="verrou-boite">
     <div class="verrou-carre" aria-hidden="true"></div>
-    <h2 id="verrouTitre">Momo Tâches</h2>
+    <h2 id="verrouTitre">Tâches</h2>
     <div class="sub">Entre ton code PIN</div>
     <input type="password" id="verrouInput" inputmode="numeric" autocomplete="off" maxlength="8" aria-label="Code PIN">
     <div class="erreur-champ" id="verrouErreur" role="alert"></div>
