@@ -6,6 +6,16 @@ const MAX_OBJECTIF = 50;
 let objectif = 0; // tâches à terminer par jour (0 = pas d'objectif)
 let taches = []; // { id, titre, fait, heure, important, date, repeter, suiteId, archive, cat, note, sous:[{id,titre,fait}], creeLe, faitLe }
 
+const LISTES = ['jour', 'semaine', 'plustard', 'capture'];
+const TAILLES = ['grande', 'moyenne', 'petite'];
+const PRIORITES = ['A', 'B', 'C'];
+// Où ranger une tâche d'après sa date : aujourd'hui (ou passée) → jour, dans les 7 jours → semaine, sinon / sans date → plus tard
+function listeDepuisDate(date){
+  if(!date) return 'plustard';
+  if(date <= auj()) return 'jour';
+  return date <= ajouterJours(auj(), 7) ? 'semaine' : 'plustard';
+}
+
 function nettoyerSous(liste){
   if(!Array.isArray(liste)) return [];
   return liste.map(s => (s && typeof s.titre === 'string' && s.titre.trim()) ? {
@@ -29,7 +39,15 @@ function nettoyerTache(t){
     repeter: REPETITIONS.includes(t.repeter) ? t.repeter : '',
     suiteId: typeof t.suiteId === 'string' ? t.suiteId : '',
     archive: !!t.archive && !!t.fait, // seules les tâches terminées s'archivent
-    stock: !!t.stock && !t.fait, // tâche rangée au stock (hors « À faire » et rappels)
+    stock: false, // ancien « stock » : remplacé par les listes ci-dessous
+    // Méthode du guide : liste (jour / semaine / plus tard), taille 1-3-5, priorité A-B-C, durée estimée, reports
+    liste: LISTES.includes(t.liste) ? t.liste : (t.fait ? 'jour' : (t.stock ? 'plustard' : listeDepuisDate(dateValide(t.date) ? t.date : ''))),
+    taille: TAILLES.includes(t.taille) ? t.taille : (t.important ? 'moyenne' : 'petite'),
+    priorite: PRIORITES.includes(t.priorite) ? t.priorite : (t.important ? 'A' : 'B'),
+    duree: Number.isInteger(t.duree) && t.duree > 0 && t.duree <= 720 ? t.duree : null, // minutes estimées (sans la marge)
+    reports: Number.isInteger(t.reports) && t.reports > 0 ? Math.min(t.reports, 99) : 0,
+    reel: Number.isInteger(t.reel) && t.reel > 0 ? Math.min(t.reel, 6000) : 0, // minutes réellement passées (mode Focus)
+    delegue: typeof t.delegue === 'string' ? t.delegue.trim().slice(0, 40) : '', // à qui la tâche a été confiée (suivi)
     sous: nettoyerSous(t.sous),
     note: typeof t.note === 'string' ? t.note.replace(/\r\n?/g, '\n').trim().slice(0, MAX_NOTE) : '',
     cat: typeof t.cat === 'string' ? t.cat.replace(/\s+/g, ' ').trim().slice(0,24) : '',
@@ -77,8 +95,12 @@ function sauvegarder(){
 
 // --- Export / import ---
 // mdp (facultatif) : sauvegarde chiffrée (voir securite.js)
+// Données de la méthode gardées à côté des tâches : objectifs et thèmes de la semaine, historique, bilans du soir
+const CLES_ANNEXES = ['todoSemaine', 'todoHistorique', 'todoBilans', 'todoRituel'];
 async function exporter(mdp){
-  let contenu = JSON.stringify({ app:'mes-taches', exporteLe:new Date().toISOString(), objectif, prefs:reglagesTheme, taches }, null, 2);
+  const annexes = {};
+  CLES_ANNEXES.forEach(k => { try{ const v = localStorage.getItem(k); if(v) annexes[k] = v; }catch(_){} });
+  let contenu = JSON.stringify({ app:'mes-taches', version:31, exporteLe:new Date().toISOString(), objectif, prefs:reglagesTheme, annexes, taches }, null, 2);
   if(mdp){
     try{ contenu = JSON.stringify(await chiffrerTexte(contenu, mdp)); }
     catch(e){ toast('Le chiffrement a échoué', 'danger'); return; }
@@ -113,6 +135,9 @@ function importer(fichier){
       if(!Array.isArray(data)){
         if(data.objectif !== undefined) enregistrerObjectif(data.objectif);
         if(data.prefs){ Object.assign(reglagesTheme, nettoyerReglages(data.prefs)); enregistrerTheme(); appliquerTheme(); }
+        if(data.annexes && typeof data.annexes === 'object'){
+          CLES_ANNEXES.forEach(k => { const v = data.annexes[k]; if(typeof v === 'string' && v.length < 500000){ try{ JSON.parse(v); localStorage.setItem(k, v); }catch(_){} } });
+        }
       }
       sauvegarder(); rendre(); fermerReglages(); majZoneSecours();
       toast(`${nImportees} tâche(s) importée(s)`, 'succes');

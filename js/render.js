@@ -4,7 +4,7 @@ let filtreCat = ''; // catégorie filtrée ('' = toutes)
 const ouvertesNotes = new Set(); // tâches dont la note est dépliée
 const ouverts = new Set(); // tâches dont la checklist est dépliée (état d'affichage, non sauvegardé)
 
-const TITRES_VUE = { afaire:"Aujourd'hui", faites:'Terminées', recurrentes:'Tâches répétées', stock:'Stock', analyse:'Analyse', journal:'Journal' };
+const TITRES_VUE = { afaire:"Aujourd'hui", capture:'Capture', planifier:'Planifier', bilan:'Bilan', journal:'Journal' };
 const SVG_COCHE = '<svg viewBox="0 0 24 24"><polyline points="5 12.5 10 17.5 19 7.5"/></svg>';
 
 function trier(a, b){
@@ -144,137 +144,84 @@ function titreJour(iso){
   return long.charAt(0).toUpperCase() + long.slice(1);
 }
 
+const INDEX_VUE = { afaire:'01', capture:'02', planifier:'03', bilan:'04', journal:'04' };
+const dateLongue = () => (s => s.charAt(0).toUpperCase() + s.slice(1))(new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' }));
+
 function rendre(){
   majRappels();
-  const visibles = taches.filter(t=>!t.archive); // les tâches archivées ne comptent que dans l'analyse
-  // STOCK AUTOMATIQUE : « À faire » ne montre que le jour même (et les retards, pour ne rien perdre).
-  // Tout le reste (demain, plus tard, sans date, mis de côté à la main) est rangé au Stock et revient seul le jour venu.
-  // Les rappels, eux, continuent de sonner à l'heure prévue.
-  const demain = ajouterJours(auj(), 1);
-  const auStock = visibles.filter(t => !t.fait && (t.stock || !t.date || t.date > auj()));
-  const idsStock = new Set(auStock.map(t => t.id));
-  const restantes = visibles.filter(t => !t.fait && !idsStock.has(t.id));
-  const faites = visibles.filter(t=>t.fait);
-  const aujourdhui = auj();
-  const enRetard = restantes.filter(t=>t.date && t.date < aujourdhui);
+  if(avancerListes()) sauvegarder(); // les tâches avancent seules (semaine → jour, report au lendemain)
+  const visibles = taches.filter(t => !t.archive);
+  const accueil = filtre === 'afaire';
 
-  // Résumé
-  $('dateJour').textContent = texteEntete((s => s.charAt(0).toUpperCase() + s.slice(1))(
-    new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' })
-  ));
-  // La carte résumé change de couleur selon l'état : retard (alerte), tout fait (vert), sinon couleur d'accent
-  // Le chiffre principal ne compte que ce qui est à faire AUJOURD'HUI (en retard + du jour) :
-  // les tâches des jours suivants, surtout répétées, ne doivent pas donner l'impression d'une montagne à faire.
-  const dues = restantes.filter(t => t.date && t.date <= aujourdhui);
-  const nFaitesAuj = compteAujourdhui();
-  const nAvenir = auStock.length;
-  const etat = enRetard.length ? 'retard' : (!dues.length && (nFaitesAuj || restantes.length || auStock.length) ? 'fini' : 'ok');
-  $('resume').dataset.etat = etat;
-  $('resumeMessage').textContent = enRetard.length
-    ? `${enRetard.length} tâche${enRetard.length>1?'s':''} en retard : reporte-${enRetard.length>1?'les':'la'} ou termine-${enRetard.length>1?'les':'la'}.`
-    : etat === 'fini' ? (nFaitesAuj ? "Tout est fait pour aujourd'hui, bravo !" : "Rien de prévu aujourd'hui.") : '';
-  const nRec = visibles.filter(t=>!t.fait && t.repeter).length;
-  $('navRec').textContent = nRec || '';
+  // En-tête éditorial : micro-date, grand numéro d'index, titre
+  $('dateJour').textContent = texteEntete(dateLongue());
   $('titreVue').textContent = TITRES_VUE[filtre] || '';
-  $('resteNb').textContent = dues.length;
-  $('resumeTotal').textContent = nAvenir ? `${nAvenir} au stock` : `${restantes.length} en cours`;
-  const r = $('resumeRetard');
-  r.hidden = !enRetard.length;
-  r.textContent = `${enRetard.length} en retard`;
-  // Barre = avancement de la journée (terminées aujourd'hui / terminées + restantes du jour)
-  const totalJour = nFaitesAuj + dues.length;
-  const pct = totalJour ? Math.round(nFaitesAuj / totalJour * 100) : 0;
-  $('barreFill').style.width = pct + '%';
-  $('barreFill').classList.toggle('complet', totalJour > 0 && pct === 100);
-  $('navAFaire').textContent = dues.length || '';
-  $('navFaites').textContent = faites.length;
-  $('stockNb').textContent = auStock.length || '';
-  $('btnStock').classList.toggle('actif', filtre === 'stock');
-  // La courbe d'évolution n'apparaît que sur l'accueil
-  // Accueil épuré : résumé, courbe et saisie rapide uniquement sur « Aujourd'hui »
-  $('resume').hidden = $('formAjout').hidden = filtre !== 'afaire';
-  $('courbe').hidden = filtre !== 'afaire';
-  if(filtre === 'afaire') rendreCourbe();
+  $('indexVue').textContent = INDEX_VUE[filtre] || '';
+  document.body.dataset.vue = filtre;
 
-  // Filtre par catégorie (ne s'affiche que s'il existe au moins une catégorie)
-  const cats = toutesCategories(visibles);
-  if(filtreCat && !cats.some(c => cleCat(c) === cleCat(filtreCat))) filtreCat = '';
-  const zoneCat = $('filtresCat');
-  if(!['afaire', 'faites', 'stock'].includes(filtre) || !cats.length){
-    zoneCat.hidden = true;
-  } else {
-    zoneCat.hidden = false;
-    zoneCat.innerHTML = `<button class="filtre-cat${filtreCat ? '' : ' actif'}" type="button" data-cat="">Toutes</button>` +
-      cats.map(c => `<button class="filtre-cat${cleCat(c) === cleCat(filtreCat) ? ' actif' : ''}" type="button" data-cat="${echapper(c)}" style="--c:${couleurCat(c)}"><i></i>${echapper(c)}</button>`).join('');
-  }
-  const dansFiltre = t => !filtreCat || memeCat(t, filtreCat);
-  const restantesL = restantes.filter(dansFiltre), faitesL = faites.filter(dansFiltre);
+  // Pastilles de la barre d'onglets
+  const { jour } = planDuJour();
+  $('navAFaire').textContent = jour.filter(t => !t.fait).length || '';
+  $('navCapture').textContent = visibles.filter(t => !t.fait && t.liste === 'capture').length || '';
+  // Le rituel du soir attend : un point sur l'onglet « Planifier »
+  $('navPlan').hidden = !(new Date().getHours() * 60 + new Date().getMinutes() >= minutes(reglagesTheme.fin) - 30 && localStorage.getItem('todoRituel') !== auj());
 
-  // Liste
-  if(filtre === 'analyse'){ $('liste').innerHTML = htmlAnalyse(); return; }
-  if(filtre === 'recurrentes'){ $('liste').innerHTML = htmlRecurrentes(); return; }
-  if(filtre === 'journal'){ $('liste').innerHTML = htmlJournal(); return; }
-  let html = '';
+  // Blocs propres à l'accueil
+  $('jourHaut').hidden = $('formAjout').hidden = !accueil;
+  $('courbe').hidden = !(accueil || filtre === 'bilan');
+  $('filtresCat').hidden = true;
+
   const termes = termesRecherche();
-  if(termes.length){ // recherche : résultats « À faire » et « Terminées », quel que soit l'onglet
-    const trouvees = visibles.filter(t => dansFiltre(t) && correspond(t, termes));
-    const trouveesA = trouvees.filter(t=>!t.fait && !idsStock.has(t.id)).sort(trier);
-    const trouveesS = trouvees.filter(t=>!t.fait && idsStock.has(t.id)).sort(trier);
-    const trouveesF = trouvees.filter(t=>t.fait).sort((a,b)=>(b.faitLe||0)-(a.faitLe||0));
-    html = trouvees.length
-      ? htmlGroupe(`À faire · ${trouveesA.length}`, trouveesA, '', '', termes) + htmlGroupe(`En stock · ${trouveesS.length}`, trouveesS, '', '', termes) + htmlGroupe(`Terminées · ${trouveesF.length}`, trouveesF, '', '', termes)
+  if(termes.length){ // recherche : toutes les listes
+    const trouvees = visibles.filter(t => correspond(t, termes));
+    const parListe = l => trouvees.filter(t => !t.fait && t.liste === l).sort(trier);
+    const faites = trouvees.filter(t => t.fait).sort((a, b) => (b.faitLe || 0) - (a.faitLe || 0));
+    $('liste').innerHTML = trouvees.length
+      ? htmlGroupe(`Aujourd'hui · ${parListe('jour').length}`, parListe('jour'), '', '', termes)
+        + htmlGroupe(`Semaine · ${parListe('semaine').length}`, parListe('semaine'), '', '', termes)
+        + htmlGroupe(`Plus tard · ${parListe('plustard').length}`, parListe('plustard'), '', '', termes)
+        + htmlGroupe(`Capture · ${parListe('capture').length}`, parListe('capture'), '', '', termes)
+        + htmlGroupe(`Terminées · ${faites.length}`, faites, '', '', termes)
       : `<div class="vide"><b>Aucun résultat</b>Rien ne correspond à « ${echapper(requete.trim())} ».</div>`;
-    $('liste').innerHTML = html;
     return;
   }
-  if(filtre === 'afaire'){
-    if(!restantes.length){
-      html = visibles.length
-        ? `<div class="vide"><b>${auStock.length ? "Rien pour aujourd'hui" : 'Tout est fait'}</b>${auStock.length ? `${auStock.length} tâche${auStock.length>1?'s':''} au stock, elle${auStock.length>1?'s arrivent':' arrive'} ici le jour venu.` : 'Profite, ou ajoute une nouvelle tâche.'}</div>`
-        : '<div class="vide"><b>Aucune tâche</b>Écris ta première tâche ci-dessus.</div>';
-    } else if(!restantesL.length){
-      html = `<div class="vide"><b>Rien à faire dans « ${echapper(filtreCat)} »</b>Choisis « Toutes » pour tout revoir.</div>`;
-    } else {
-      const trie = restantesL.slice().sort(trier);
-      const retardees = trie.filter(t=>t.date && t.date < aujourdhui);
-      const actionRetard = retardees.length > 1
-        ? '<button class="lien-discret neutre" type="button" data-act="reporter-tout">Tout reporter à aujourd\'hui</button>' : '';
-      html += htmlGroupe('En retard', retardees, 'retard', actionRetard, null, 'retard');
-      html += htmlGroupe("Aujourd'hui", trie.filter(t=>t.date === aujourdhui), '', '', null, 'auj');
-    }
-    // On oublie les jours passés dans les groupes mémorisés
-    let nettoye = false;
-    [groupesReplies, groupesOuverts].forEach(s => s.forEach(k => { if(k.startsWith('j-') && k.slice(2) <= aujourdhui){ s.delete(k); nettoye = true; } }));
-    if(nettoye) sauverGroupes();
-  } else if(filtre === 'stock'){
-    html = htmlStock(auStock, auStock.filter(dansFiltre), demain);
-  } else {
-    if(!faites.length){
-      html = '<div class="vide"><b>Rien ici</b>Les tâches terminées apparaîtront ici.</div>';
-    } else if(!faitesL.length){
-      html = `<div class="vide"><b>Rien de terminé dans « ${echapper(filtreCat)} »</b>Choisis « Toutes » pour tout revoir.</div>`;
-    } else {
-      const trie = faitesL.slice().sort((a,b)=>(b.faitLe||0)-(a.faitLe||0));
-      html = htmlGroupe(`Terminées`, trie, '', '<button class="lien-discret" type="button" data-act="vider">Tout archiver</button>', null, 'faites');
-    }
+
+  if(accueil){
+    $('jourHaut').innerHTML = htmlJourHaut();
+    rendreCourbe();
+    $('liste').innerHTML = htmlJourListe();
+  } else if(filtre === 'capture'){
+    $('liste').innerHTML = htmlCapture();
+  } else if(filtre === 'planifier'){
+    $('liste').innerHTML = htmlPlanifier();
+  } else if(filtre === 'bilan'){
+    rendreCourbe();
+    $('liste').innerHTML = htmlBilan();
+  } else if(filtre === 'journal'){
+    $('liste').innerHTML = htmlJournal();
   }
-  $('liste').innerHTML = html;
+  // On oublie les jours passés dans les groupes mémorisés
+  let nettoye = false;
+  [groupesReplies, groupesOuverts].forEach(s => s.forEach(k => { if(k.startsWith('j-') && k.slice(2) <= auj()){ s.delete(k); nettoye = true; } }));
+  if(nettoye) sauverGroupes();
 }
 
 function basculerFiltre(nom){
+  const change = nom !== filtre;
   filtre = nom;
-  const vueListe = nom === 'afaire' || nom === 'faites' || nom === 'stock'; // la recherche ne concerne que les listes de tâches
+  const vueListe = nom === 'afaire' || nom === 'capture' || nom === 'planifier'; // la recherche ne concerne que les listes de tâches
   $('btnRecherche').hidden = !vueListe;
   if(!vueListe){
     requete = ''; $('inputRecherche').value = '';
     $('zoneRecherche').hidden = true; $('btnRecherche').classList.remove('actif');
   }
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('actif', b.dataset.filtre === nom));
-  const l = $('liste');
-  l.classList.remove('anim'); void l.offsetWidth; l.classList.add('anim');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('actif', b.dataset.filtre === (nom === 'journal' ? 'bilan' : nom)));
   rendre();
+  if(change){ // transition « ouverture de partie » : le numéro glisse, le contenu monte
+    document.body.classList.remove('entree'); void document.body.offsetWidth; document.body.classList.add('entree');
+    window.scrollTo({ top:0 });
+  }
 }
-
 
 // ---------- Analyse des tâches terminées ----------
 function htmlAnalyse(){

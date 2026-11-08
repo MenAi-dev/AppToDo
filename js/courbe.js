@@ -88,7 +88,7 @@ function rendreCourbe(){
     <div class="courbe-zone" id="cvZone">
       <svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Courbe des tâches terminées par jour">
         <defs><linearGradient id="cvGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="var(--bleu)" stop-opacity="0.28"/><stop offset="1" stop-color="var(--bleu)" stop-opacity="0"/></linearGradient></defs>
+          <stop offset="0" stop-color="var(--bleu)" stop-opacity="0.16"/><stop offset="1" stop-color="var(--bleu)" stop-opacity="0"/></linearGradient></defs>
         <line class="cv-grille" x1="${g}" x2="${W - g}" y1="${y(0)}" y2="${y(0)}"/>
         <line class="cv-grille cv-tiret" x1="${g}" x2="${W - g}" y1="${y(max)}" y2="${y(max)}"/>
         <text class="cv-max" x="${g}" y="${y(max) - 4}">${max}</text>

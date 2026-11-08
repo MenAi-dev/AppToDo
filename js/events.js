@@ -82,15 +82,18 @@ $('chipRepeter').addEventListener('click', ()=>{
 let brouillonTache = null; // tâche en cours de création (pas encore enregistrée)
 
 // Construit la tâche à partir de la saisie (texte + puces + détection automatique). saisie vide = fiche vierge.
-function construireBrouillon(saisie){
+// taille (facultatif) : forcer la taille (ex. « choisir la grenouille »). Sinon : la première place libre du 1-3-5.
+function construireBrouillon(saisie, taille){
   // Les puces choisies à la main passent avant ce qui est détecté dans le texte
   const auto = (saisie && !ignorerAuto) ? analyserSaisie(saisie) : null;
   const detecte = !!(auto && auto.trouve);
   let date = nouvelleDate || (detecte ? auto.date : '');
-  if(!date) date = auj(); // sans date précisée, la tâche est pour aujourd'hui (sinon elle partirait au stock, hors de vue)
-  return { id:nouvelId(), titre:detecte ? auto.titre : saisie, fait:false, important:nouvelImportant || (detecte && auto.important), date,
+  if(!date) date = auj(); // sans date précisée, la tâche est pour aujourd'hui
+  const important = nouvelImportant || (detecte && auto.important);
+  return { id:nouvelId(), titre:detecte ? auto.titre : saisie, fait:false, important, date,
     heure:(detecte && auto.heure) ? auto.heure : '', avance:null, notifie:false, vu:false,
     repeter:nouvelleRepet || (detecte ? auto.repeter : ''), cat:nouvelleCat || (detecte && auto.cat ? canoniqueCat(auto.cat) : ''),
+    liste:listeDepuisDate(date), taille:taille || premiereTailleLibre(), priorite:important ? 'A' : 'B', duree:null, reports:0,
     suiteId:'', sous:[], note:'', creeLe:Date.now(), faitLe:null };
 }
 
@@ -108,13 +111,15 @@ function enregistrerNouvelle(brut){
   $('inputTitre').value = '';
   reinitialiserOptions();
   if(requete) fermerRecherche();
-  if(t.date > auj()){ // datée après aujourd'hui : elle part au stock, et revient seule le jour venu
-    if(filtre !== 'afaire') basculerFiltre('afaire'); else rendre();
-    toast(`Ajoutée au stock (${libelleDate(t.date)}) · elle apparaîtra ici ce jour-là`, '', { label:'Voir', fn:()=>basculerFiltre('stock') });
+  vibrer(10);
+  if(t.liste !== 'jour'){ // pas pour aujourd'hui : elle attend dans « Semaine », et reviendra seule le jour venu
+    rendre();
+    toast(t.liste === 'semaine' ? `Ajoutée à la semaine (${libelleDate(t.date)})` : 'Rangée dans « plus tard »', '', { label:'Voir', fn:()=>basculerFiltre('semaine') });
   } else {
-    vibrer(10);
     if(filtre !== 'afaire') basculerFiltre('afaire'); else rendre();
-    toast('Tâche ajoutée', 'succes');
+    const horsPlan = planDuJour().horsPlan.some(x => x.id === t.id);
+    toast(horsPlan ? 'Ajoutée hors plan : le 1-3-5 est plein' : 'Tâche ajoutée', horsPlan ? 'alerte' : 'succes',
+      horsPlan ? { label:'Vers la semaine', fn:()=>{ const x = taches.find(y => y.id === t.id); if(x) deplacer(x, 'semaine'); } } : null);
   }
 }
 
@@ -151,11 +156,30 @@ $('nav').addEventListener('click', e=>{
   if(b && b.dataset.filtre !== filtre) basculerFiltre(b.dataset.filtre);
 });
 
-// --- Actions sur la liste ---
-$('liste').addEventListener('click', e=>{
+// --- Actions sur les tâches : la liste ET le haut de l'accueil (grenouille, places du 1-3-5) ---
+document.querySelector('.wrap').addEventListener('click', e=>{
   const el = e.target.closest('[data-act]');
   if(!el) return;
   const act = el.dataset.act;
+
+  // Méthode : ajouter dans une place du 1-3-5 (aujourd'hui ou demain), déplacer entre les listes, ouvrir le journal
+  if(act === 'ajouter'){
+    const b = construireBrouillon('', el.dataset.taille);
+    if(el.dataset.date && el.dataset.date > auj()){ b.liste = 'semaine'; b.date = el.dataset.date; if(!el.dataset.taille) b.taille = premiereTailleLibre(b.date); }
+    ouvrirEdition(b, true); return;
+  }
+  if(act === 'ouvrir-journal'){ basculerFiltre('journal'); return; }
+  if(act === 'trier'){ ouvrirTri(); return; }
+  if(act === 'minimal'){ basculerMinimale(); return; }
+  if(act === 'rituel'){ sousPlan = 'rituel'; basculerFiltre('planifier'); return; }
+  if(act === 'revue'){ sousPlan = 'semaine'; basculerFiltre('planifier'); return; }
+  if(act === 'focus'){ const ft = el.closest('[data-id]'); if(ft) ouvrirFocus(ft.dataset.id); return; }
+  if(act === 'suppr-capture'){ supprimerTache(el.closest('[data-id]').dataset.id); return; }
+  if(act === 'vers-jour' || act === 'vers-semaine' || act === 'vers-plustard'){
+    const lt = taches.find(x => x.id === el.closest('[data-id]').dataset.id);
+    if(lt) deplacer(lt, act.slice(5));
+    return;
+  }
 
   if(act === 'vider'){
     const aArchiver = taches.filter(t=>t.fait && !t.archive && (!filtreCat || memeCat(t, filtreCat)));
@@ -179,22 +203,6 @@ $('liste').addEventListener('click', e=>{
   if(act === 'vider-journal'){
     if(!journal.length || !confirm('Effacer tout le journal ? Tes tâches ne sont pas touchées.')) return;
     viderJournal(); rendre(); toast('Journal effacé');
-    return;
-  }
-  if(act === 'stock-tout'){
-    remettreDuStock(taches.filter(t=>t.stock && !t.fait && !t.archive && (!filtreCat || memeCat(t, filtreCat))));
-    return;
-  }
-  if(act === 'rec-edit' || act === 'rec-stop' || act === 'rec-stock' || act === 'stock-edit' || act === 'stock-remettre'){
-    const rt = taches.find(x=>x.id === el.closest('.rec-ligne').dataset.id);
-    if(!rt) return;
-    if(act === 'rec-edit' || act === 'stock-edit'){ ouvrirEdition(rt); return; }
-    if(act === 'rec-stock'){ mettreEnStock(rt); return; }
-    if(act === 'stock-remettre'){ remettreDuStock([rt]); return; }
-    const ancienne = rt.repeter;
-    rt.repeter = '';
-    sauvegarder(); rendre();
-    toast('Répétition arrêtée', '', { label:'Annuler', fn:()=>{ rt.repeter = ancienne; sauvegarder(); rendre(); } });
     return;
   }
   if(act === 'jour'){
@@ -246,14 +254,21 @@ function basculerFait(t){
     t.fait = true; t.faitLe = Date.now();
     let suivante = null;
     if(t.repeter){
+      const dateSuivante = prochaineDate(t.date, t.repeter);
       suivante = { id:nouvelId(), titre:t.titre, fait:false, important:t.important,
-        date:prochaineDate(t.date, t.repeter), heure:t.heure || '', avance:t.avance, notifie:false, vu:false, repeter:t.repeter, suiteId:'', creeLe:Date.now(), faitLe:null,
+        liste:listeDepuisDate(dateSuivante), taille:t.taille, priorite:t.priorite, duree:t.duree, reports:0, // elle attend dans la semaine
+        date:dateSuivante, heure:t.heure || '', avance:t.avance, notifie:false, vu:false, repeter:t.repeter, suiteId:'', creeLe:Date.now(), faitLe:null,
         cat:t.cat || '', note:t.note || '', sous:(t.sous || []).map(s=>({ id:nouvelId(), titre:s.titre, fait:false })) }; // checklist remise à zéro
       taches.push(suivante);
       t.suiteId = suivante.id;
     }
     noter('fait', t.titre);
     vibrer(10);
+    // Loi de Laborit : on commence spontanément par le facile. Rappel doux (une fois par jour) si la grenouille attend.
+    if(t.taille !== 'grande' && t.liste === 'jour' && new Date().getHours() < 12 && localStorage.getItem('todoLaborit') !== auj()){
+      const g = planDuJour().plan.grande.afaire[0];
+      if(g){ try{ localStorage.setItem('todoLaborit', auj()); }catch(_){} setTimeout(()=>toast('Laborit : la grenouille d\'abord, le facile ensuite', 'alerte', { label:'Focus', fn:()=>ouvrirFocus(g.id) }), 900); }
+    }
     sauvegarder(); rendre();
     if(objectif && !suivante && compteAujourdhui() === objectif) toast('Objectif du jour atteint 🎯', 'succes');
     if(suivante){
@@ -326,54 +341,99 @@ function supprimerTache(id){
   toast('Tâche supprimée', '', { label:'Annuler', fn:()=>{ taches.splice(Math.min(i, taches.length), 0, supprimee); sauvegarder(); rendre(); } });
 }
 
-// --- Modifier une tâche ---
+// --- La fiche : créer ou modifier une tâche (méthode du guide : taille 1-3-5, priorité, durée, liste) ---
+const valeurSeg = id => { const b = $(id).querySelector('[aria-pressed="true"]'); return b ? b.dataset.v : ''; };
+function choisirSeg(id, v){ $(id).querySelectorAll('[data-v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v))); }
+
+// Conseils en direct, tirés du guide (lois en contexte)
+function majFiche(){
+  const liste = valeurSeg('editListe'), taille = valeurSeg('editTaille');
+  $('champDate').hidden = liste === 'jour';
+  $('editConseil').textContent = conseilTitre($('editTitre').value);
+  // 1-3-5 : places restantes pour cette taille aujourd'hui
+  const jourCible = liste === 'jour' ? auj() : (liste === 'semaine' && $('editDate').value) || '';
+  if(jourCible){
+    const reste = placesRestantes(taille, tacheEnEdition, jourCible);
+    $('editTailleInfo').textContent = reste > 0 ? `${reste} place${reste > 1 ? 's' : ''} libre${reste > 1 ? 's' : ''} sur ${PLACES[taille]} ${liste === 'jour' ? "aujourd'hui" : libelleDate(jourCible).toLowerCase()} · ${AIDE_TAILLE[taille]}`
+      : `Plus de place : ${PLACES[taille]} ${LIB_TAILLE[taille].toLowerCase()} max. Elle sera « hors plan » — envoie-la plutôt à la semaine.`;
+    $('editTailleInfo').classList.toggle('alerte', reste <= 0);
+  } else { $('editTailleInfo').textContent = AIDE_TAILLE[taille]; $('editTailleInfo').classList.remove('alerte'); }
+  $('editPrioInfo').textContent = LIB_PRIO[valeurSeg('editPrio')] || '';
+  // Durée : estimation + marge (Hofstadter), ou rappel de Parkinson
+  const d = parseInt($('editDuree').value, 10);
+  $('editDureeInfo').textContent = d > 0
+    ? `Planifiée avec la marge de ${reglagesTheme.marge} % : ${dureeTexte(dureePlanifiee({ duree:d }))}${taille === 'petite' && d > 30 ? ' · un peu long pour une petite tâche' : ''}${d > 120 ? ' · plus de 2 h : découpe-la en étapes' : ''}`
+    : 'Parkinson : sans limite, une tâche occupe tout le temps disponible. Donne-lui une durée.';
+  document.querySelectorAll('#editDurees [data-min]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.min) === d)));
+  majChampHeure();
+}
+
 function ouvrirEdition(t, creation){
   tacheEnEdition = t.id;
   brouillonTache = creation ? t : null;
-  // La même fiche sert à créer et à modifier
   $('editEntete').textContent = creation ? 'Nouvelle tâche' : 'Modifier la tâche';
-  $('editSub').textContent = creation ? "Remplis ce que tu veux : tout est facultatif sauf le texte." : "Change le texte, la date, l'importance, la répétition, la catégorie, les sous-tâches ou la note.";
+  $('editIndex').textContent = creation ? '+' : '✎';
   $('editValider').textContent = creation ? 'Ajouter' : 'Enregistrer';
   $('editSecondaire').hidden = !!creation;
   $('editTitre').value = t.titre;
-  $('editDate').value = t.date;
+  choisirSeg('editListe', t.liste || listeDepuisDate(t.date));
+  choisirSeg('editTaille', t.taille || 'petite');
+  choisirSeg('editPrio', t.priorite || 'B');
+  $('editDuree').value = t.duree || '';
+  $('editDate').value = (t.liste && t.liste !== 'jour') ? (t.date || '') : '';
   $('editHeure').value = t.heure || '';
   $('editAvance').value = t.avance === null || t.avance === undefined ? avanceDefaut : t.avance;
-  majChampHeure();
-  $('editStock').textContent = t.stock ? 'Remettre à faire' : 'Mettre en stock';
-  $('editImportant').value = t.important ? '1' : '0';
   $('editRepeter').value = t.repeter || '';
-  $('editCat').value = t.cat || '';
   $('editNote').value = t.note || '';
-  $('listeCats').innerHTML = toutesCategories().map(c=>`<option value="${echapper(c)}">`).join('');
   sousEdition = (t.sous || []).map(s=>({ ...s }));
   dessinerSousEdition();
   $('editSousNouvelle').value = '';
+  $('editReport').hidden = !(t.reports >= 3 && !t.fait);
+  $('editReport').textContent = `Reportée ${t.reports} fois. Est-elle vraiment importante ? Si oui, découpe-la en étapes ; sinon, range-la « plus tard » ou supprime-la.`;
+  majFiche();
   $('overlayEdit').classList.add('actif');
+  if(creation && !t.titre) setTimeout(()=>$('editTitre').focus(), 250);
 }
 function fermerEdition(){ $('overlayEdit').classList.remove('actif'); tacheEnEdition = null; brouillonTache = null; } // annuler garde le texte saisi
 
 $('editAnnuler').addEventListener('click', fermerEdition);
+$('overlayEdit').addEventListener('click', e=>{
+  const s = e.target.closest('.seg [data-v]');
+  if(s){ choisirSeg(s.parentElement.id, s.dataset.v); vibrer(4); majFiche(); return; }
+  const d = e.target.closest('[data-min]');
+  if(d){ $('editDuree').value = d.dataset.min; vibrer(4); majFiche(); }
+});
+['editTitre', 'editDuree', 'editDate'].forEach(id => $(id).addEventListener('input', majFiche));
 
 // --- Rappels : champ heure + minutes d'avance ---
 function majChampHeure(){
-  const date = $('editDate').value;
+  const liste = valeurSeg('editListe');
+  const date = liste === 'jour' ? auj() : $('editDate').value;
   $('editHeure').disabled = !date;
   if(!date) $('editHeure').value = '';
   $('blocAvance').hidden = !$('editHeure').value;
-  $('aideRappel').textContent = $('editHeure').value ? aideNotification() : '';
+  $('aideRappel').textContent = $('editHeure').value ? aideNotification() : (!date ? 'Choisis un jour pour pouvoir fixer une heure.' : '');
 }
-$('editDate').addEventListener('change', majChampHeure);
 $('editHeure').addEventListener('input', majChampHeure);
 
 $('editValider').addEventListener('click', ()=>{
   const t = brouillonTache && brouillonTache.id === tacheEnEdition ? brouillonTache : taches.find(x=>x.id === tacheEnEdition);
   const titre = $('editTitre').value.trim();
   if(!t) return fermerEdition();
-  if(!titre){ toast('Le texte ne peut pas être vide', 'alerte'); return; }
+  if(!titre){ toast('Écris la tâche : un verbe, un objet, un résultat', 'alerte'); $('editTitre').focus(); return; }
   t.titre = titre;
   const avantRappel = [t.date, t.heure, t.avance].join('|');
-  t.date = $('editDate').value;
+  // Liste et date : « aujourd'hui » = la date du jour ; une date passée ou du jour ramène la tâche dans la journée
+  let liste = valeurSeg('editListe') || t.liste; // une idée de la capture reste dans la capture tant qu'on ne choisit pas
+  let date = liste === 'jour' ? auj() : $('editDate').value;
+  if(liste !== 'jour' && date && date <= auj()){ liste = 'jour'; date = auj(); }
+  if(liste === 'semaine' && !date) date = '';
+  t.liste = liste; t.date = date;
+  t.taille = valeurSeg('editTaille') || 'petite';
+  t.priorite = valeurSeg('editPrio') || 'B';
+  t.important = t.priorite === 'A';
+  const d = parseInt($('editDuree').value, 10);
+  t.duree = d > 0 && d <= 720 ? d : null;
   t.heure = t.date ? $('editHeure').value : '';
   if(t.heure){
     const av = parseInt($('editAvance').value, 10);
@@ -382,24 +442,20 @@ $('editValider').addEventListener('click', ()=>{
     demanderNotifications();
   } else t.avance = null;
   if([t.date, t.heure, t.avance].join('|') !== avantRappel){ t.notifie = false; t.vu = false; }
-  t.important = $('editImportant').value === '1';
   const nouvelle = $('editSousNouvelle').value.trim();
   if(nouvelle && sousEdition.length < MAX_SOUS) sousEdition.push({ id:nouvelId(), titre:nouvelle.slice(0,140), fait:false });
   t.sous = nettoyerSous(sousEdition);
-  t.cat = canoniqueCat($('editCat').value);
   t.note = $('editNote').value.replace(/\r\n?/g, '\n').trim().slice(0, MAX_NOTE);
   t.repeter = $('editRepeter').value;
-  if(!t.date && (t.repeter || t === brouillonTache)) t.date = auj(); // une tâche répétée ou nouvelle a besoin d'une date (sinon : stock)
+  if(t.repeter && !t.date){ t.date = auj(); t.liste = 'jour'; } // une tâche répétée a besoin d'une date
   if(t === brouillonTache){ fermerEdition(); enregistrerNouvelle(t); return; }
   sauvegarder(); rendre(); fermerEdition();
 });
-$('editStock').addEventListener('click', ()=>{
+$('editPlusTard').addEventListener('click', ()=>{
   const t = taches.find(x=>x.id === tacheEnEdition);
   fermerEdition();
-  if(!t) return;
-  if(t.stock) remettreDuStock([t]); else mettreEnStock(t);
+  if(t) deplacer(t, t.liste === 'plustard' ? 'semaine' : 'plustard');
 });
-$('btnStock').addEventListener('click', ()=>{ basculerFiltre(filtre === 'stock' ? 'afaire' : 'stock'); window.scrollTo({ top:0, behavior:'smooth' }); });
 $('editSuppr').addEventListener('click', ()=>{
   const id = tacheEnEdition;
   fermerEdition();

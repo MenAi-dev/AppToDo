@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="sombre">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Momo Tâches">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="icon" href="icons/icon-192.png">
@@ -17,102 +17,129 @@
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/modals.css">
 <link rel="stylesheet" href="css/design.css">
+<link rel="stylesheet" href="css/ios.css">
 </head>
-<body>
+<body data-vue="afaire">
+<!-- Écran de bienvenue au lancement (js/accueil.js) -->
+<div class="splash" id="splash" role="status" aria-live="polite"></div>
 <div class="wrap">
 
+  <!-- En-tête éditorial : micro-date, grand numéro d'index, titre -->
   <header>
     <div class="entete-txt">
-      <p id="dateJour" class="micro"></p>
+      <p class="micro"><i class="carre"></i><span id="dateJour"></span></p>
+      <div class="index" id="indexVue" aria-hidden="true">01</div>
       <h1 id="titreVue">Aujourd'hui</h1>
     </div>
     <div class="header-actions">
       <button class="btn-icone" id="btnRecherche" type="button" aria-label="Rechercher une tâche">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
-      </button>
-      <button class="btn-icone" id="btnStock" type="button" aria-label="Stock : tâches mises de côté">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8M1 3h22v5H1zM10 12h4"/></svg>
-        <span class="badge-nb" id="stockNb"></span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
       </button>
       <button class="btn-icone" id="btnReglages" type="button" aria-label="Réglages">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><rect x="14" y="5" width="4" height="4"/><rect x="6" y="15" width="4" height="4"/></svg>
       </button>
     </div>
   </header>
 
+  <div class="zone-recherche" id="zoneRecherche" hidden>
+    <input type="search" id="inputRecherche" placeholder="Rechercher une tâche, une étape…" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button type="button" id="rechercheFermer" aria-label="Fermer la recherche">✕</button>
+  </div>
+
   <div class="bandeau-rappels" id="bandeauRappels" hidden></div>
 
-  <section class="resume" id="resume" data-etat="ok">
-    <div class="resume-haut">
-      <div class="valeur" id="resteNb">0</div>
-      <div class="resume-droite">
-        <div class="label">à faire aujourd'hui</div>
-        <div id="resumeTotal">0 tâche</div>
-        <div class="retard-info" id="resumeRetard" hidden></div>
-      </div>
-    </div>
-    <div class="barre"><div class="barre-fill" id="barreFill"></div></div>
-    <div class="message-etat" id="resumeMessage"></div>
-  </section>
-
-  <section class="courbe" id="courbe" aria-label="Évolution des tâches terminées"></section>
+  <!-- Accueil : grenouille, figure 1-3-5, jauge 60/40 -->
+  <div id="jourHaut"></div>
 
   <form class="ajout" id="formAjout" autocomplete="off">
     <div class="ajout-ligne">
-      <input id="inputTitre" type="text" placeholder="Nouvelle tâche… ex. Appeler Paul demain #perso" maxlength="140" enterkeyhint="done" aria-label="Nouvelle tâche">
+      <input id="inputTitre" type="text" placeholder="Nouvelle tâche : un verbe, un objet, un résultat" maxlength="140" enterkeyhint="go" aria-label="Nouvelle tâche">
       <button type="submit" class="btn-plus" aria-label="Ajouter la tâche">+</button>
     </div>
     <div class="ajout-options">
-      <label class="chip" id="chipDate">
-        <span id="chipDateTxt">📅 Date</span>
-        <input type="date" id="inputDate" aria-label="Date d'échéance">
-      </label>
+      <label class="chip" id="chipDate"><span id="chipDateTxt">Date</span><input type="date" id="inputDate" aria-label="Date d'échéance"></label>
       <button type="button" class="chip chip-x" id="effacerDate" hidden aria-label="Retirer la date">✕</button>
-      <button type="button" class="chip" id="chipImportant">☆ Important</button>
-      <button type="button" class="chip" id="chipRepeter">🔁 Répéter</button>
-      <button type="button" class="chip" id="chipCat">🏷 Catégorie</button>
+      <button type="button" class="chip" id="chipImportant">Important</button>
+      <button type="button" class="chip" id="chipRepeter">Répéter</button>
+      <button type="button" class="chip" id="chipCat">Catégorie</button>
     </div>
     <div class="apercu" id="apercu" hidden></div>
   </form>
-
-  <div class="zone-recherche" id="zoneRecherche" hidden>
-    <input type="search" id="inputRecherche" placeholder="Rechercher (titre, étape, catégorie)…" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false">
-    <button type="button" id="rechercheFermer" aria-label="Fermer la recherche">✕</button>
-  </div>
 
   <div class="filtres-cat" id="filtresCat" hidden></div>
 
   <div id="liste"></div>
 
-  <footer>Fonctionne hors ligne · Données enregistrées sur cet appareil</footer>
+  <section class="courbe" id="courbe" aria-label="Évolution des tâches terminées"></section>
+
+  <footer>L'art de planifier sa journée · données sur cet appareil</footer>
 </div>
 
-<!-- Barre de navigation flottante -->
+<!-- Barre d'onglets -->
 <nav class="nav" id="nav" aria-label="Sections">
-  <button class="nav-btn actif" data-filtre="afaire" type="button"><span class="nav-fond"></span><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/></svg><span class="nav-txt">À faire <span class="nav-n" id="navAFaire">0</span></span></button>
-  <button class="nav-btn" data-filtre="faites" type="button"><span class="nav-fond"></span><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg><span class="nav-txt">Faites <span class="nav-n" id="navFaites">0</span></span></button>
-  <button class="nav-btn" data-filtre="recurrentes" type="button"><span class="nav-fond"></span><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/></svg><span class="nav-txt">Répétées <span class="nav-n" id="navRec"></span></span></button>
-  <button class="nav-btn" data-filtre="analyse" type="button"><span class="nav-fond"></span><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-7"/></svg><span class="nav-txt">Analyse</span></button>
-  <button class="nav-btn" data-filtre="journal" type="button"><span class="nav-fond"></span><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="nav-txt">Journal</span></button>
+  <button class="nav-btn actif" data-filtre="afaire" type="button"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg><span class="nav-num">01</span><span class="nav-txt">Aujourd'hui</span><span class="nav-n" id="navAFaire"></span></button>
+  <button class="nav-btn" data-filtre="capture" type="button"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13l2.5-7.5A2 2 0 0 1 7.4 4h9.2a2 2 0 0 1 1.9 1.5L21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/></svg><span class="nav-num">02</span><span class="nav-txt">Capture</span><span class="nav-n" id="navCapture"></span></button>
+  <button class="nav-btn" data-filtre="planifier" type="button"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M7.5 14h3M13.5 14h3M7.5 17.5h3"/></svg><span class="nav-num">03</span><span class="nav-txt">Planifier</span><span class="nav-point" id="navPlan" hidden></span></button>
+  <button class="nav-btn" data-filtre="bilan" type="button"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V13M10 20V8M16 20v-9M22 20H2"/><path d="M4 9l6-4 6 4 5-4"/></svg><span class="nav-num">04</span><span class="nav-txt">Bilan</span></button>
 </nav>
 
-<!-- Modifier une tâche -->
+<!-- Fiche : créer ou modifier une tâche -->
 <div class="overlay" id="overlayEdit">
-  <div class="modal"><div class="sheet-grabber"></div>
-    <h3 id="editEntete">Modifier la tâche</h3>
-    <div class="sub" id="editSub">Change le texte, la date, l'importance, la répétition, la catégorie, les sous-tâches ou la note.</div>
+  <div class="modal fiche"><div class="sheet-grabber"></div>
+    <div class="fiche-tete"><span class="index index-fiche" id="editIndex">+</span><h3 id="editEntete">Nouvelle tâche</h3></div>
+
     <div class="champ">
-      <label for="editTitre">Tâche</label>
-      <input id="editTitre" type="text" maxlength="140">
+      <label for="editTitre">Tâche · verbe + objet + résultat</label>
+      <input id="editTitre" type="text" maxlength="140" placeholder="Ex. Appeler les 5 prospects du salon pour fixer un rendez-vous">
+      <div class="loi" id="editConseil"></div>
     </div>
+
     <div class="champ">
-      <label for="editDate">Date (facultatif)</label>
-      <input id="editDate" type="date">
+      <label>Quand</label>
+      <div class="seg seg-3" id="editListe" role="group" aria-label="Liste">
+        <button type="button" data-v="jour" aria-pressed="true">Aujourd'hui</button>
+        <button type="button" data-v="semaine" aria-pressed="false">Cette semaine</button>
+        <button type="button" data-v="plustard" aria-pressed="false">Plus tard</button>
+      </div>
+      <div id="champDate" hidden><input id="editDate" type="date" aria-label="Jour prévu (facultatif)"><div class="aide">Facultatif. Elle reviendra seule dans ta journée ce jour-là.</div></div>
     </div>
+
+    <div class="champ">
+      <label>Taille · règle 1-3-5</label>
+      <div class="seg seg-3" id="editTaille" role="group" aria-label="Taille">
+        <button type="button" data-v="grande" aria-pressed="false">Grande</button>
+        <button type="button" data-v="moyenne" aria-pressed="false">Moyenne</button>
+        <button type="button" data-v="petite" aria-pressed="true">Petite</button>
+      </div>
+      <div class="aide" id="editTailleInfo"></div>
+    </div>
+
+    <div class="champ">
+      <label>Priorité · ABC</label>
+      <div class="seg seg-3 seg-prio" id="editPrio" role="group" aria-label="Priorité">
+        <button type="button" data-v="A" aria-pressed="false">A</button>
+        <button type="button" data-v="B" aria-pressed="true">B</button>
+        <button type="button" data-v="C" aria-pressed="false">C</button>
+      </div>
+      <div class="aide" id="editPrioInfo"></div>
+    </div>
+
+    <div class="champ">
+      <label for="editDuree">Durée estimée</label>
+      <div class="duree-ligne">
+        <div class="puces-duree" id="editDurees">
+          <button type="button" data-min="10">10</button><button type="button" data-min="15">15</button><button type="button" data-min="30">30</button>
+          <button type="button" data-min="45">45</button><button type="button" data-min="60">60</button><button type="button" data-min="90">90</button><button type="button" data-min="120">120</button>
+        </div>
+        <label class="duree-libre"><input id="editDuree" type="number" inputmode="numeric" min="5" max="720" step="5" placeholder="—"><span>min</span></label>
+      </div>
+      <div class="aide" id="editDureeInfo"></div>
+    </div>
+
     <div class="champ" id="champHeure">
-      <label for="editHeure">Rappel (facultatif)</label>
+      <label for="editHeure">Moment · rappel (facultatif)</label>
       <div class="rappel-ligne">
-        <input id="editHeure" type="time" aria-label="Heure du rappel">
+        <input id="editHeure" type="time" aria-label="Heure prévue">
         <div class="rappel-avance" id="blocAvance" hidden>
           <input id="editAvance" type="number" inputmode="numeric" min="0" max="1440" aria-label="Minutes d'avance">
           <span>min avant</span>
@@ -120,13 +147,7 @@
       </div>
       <div class="aide" id="aideRappel"></div>
     </div>
-    <div class="champ">
-      <label for="editImportant">Importance</label>
-      <select id="editImportant">
-        <option value="0">Normale</option>
-        <option value="1">Importante ★</option>
-      </select>
-    </div>
+
     <div class="champ">
       <label for="editRepeter">Répétition</label>
       <select id="editRepeter">
@@ -137,26 +158,75 @@
       </select>
     </div>
     <div class="champ">
-      <label for="editCat">Catégorie</label>
-      <input id="editCat" type="text" list="listeCats" maxlength="24" placeholder="Aucune" autocomplete="off">
-      <datalist id="listeCats"></datalist>
-    </div>
-    <div class="champ">
-      <label for="editSousNouvelle">Sous-tâches</label>
+      <label for="editSousNouvelle">Étapes · si elle prend plus de 2 h, découpe-la</label>
       <div class="sous-liste" id="editSous"></div>
-      <input id="editSousNouvelle" type="text" maxlength="140" placeholder="Ajouter une sous-tâche…" enterkeyhint="done" autocomplete="off">
+      <input id="editSousNouvelle" type="text" maxlength="140" placeholder="Ajouter une étape…" enterkeyhint="done" autocomplete="off">
     </div>
     <div class="champ">
       <label for="editNote">Note</label>
-      <textarea id="editNote" rows="3" maxlength="1000" placeholder="Détails, adresse, lien…"></textarea>
+      <textarea id="editNote" rows="2" maxlength="1000" placeholder="Détails, adresse, lien…"></textarea>
     </div>
+    <div class="loi alerte" id="editReport" hidden></div>
     <div class="modal-actions">
       <button class="btn-annuler" id="editAnnuler" type="button">Annuler</button>
-      <button class="btn-valider" id="editValider" type="button">Enregistrer</button>
+      <button class="btn-valider" id="editValider" type="button">Ajouter</button>
     </div>
     <div id="editSecondaire">
-      <div class="modal-actions"><button class="btn-annuler" id="editStock" type="button">Mettre en stock</button></div>
+      <div class="modal-actions"><button class="btn-annuler" id="editPlusTard" type="button">Ranger « plus tard »</button></div>
       <div class="modal-delete-link"><button id="editSuppr" type="button">Supprimer cette tâche</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Tri de la capture : une carte à la fois -->
+<div class="overlay plein" id="overlayTri">
+  <div class="plein-boite">
+    <div class="plein-tete">
+      <div class="micro"><i class="carre"></i>Trier la capture · <span id="triCompte"></span></div>
+      <button class="btn-icone" type="button" data-tri="fermer" aria-label="Fermer">✕</button>
+    </div>
+    <div class="tri-progression"><i id="triBarre"></i></div>
+    <div class="tri-zone" id="triZone"></div>
+    <div class="tri-message" id="triMessage" aria-live="polite"></div>
+    <div class="tri-actions" id="triActions">
+      <button type="button" class="tri-btn danger" data-tri="suppr"><b>Supprimer</b><small>pas utile</small></button>
+      <button type="button" class="tri-btn" data-tri="fait"><b>Faite</b><small>moins de 2 min</small></button>
+      <button type="button" class="tri-btn fort" data-tri="jour"><b>Aujourd'hui</b><small>liste du jour</small></button>
+      <button type="button" class="tri-btn" data-tri="semaine"><b>Semaine</b><small>cette semaine</small></button>
+      <button type="button" class="tri-btn" data-tri="plustard"><b>Plus tard</b><small>un jour, peut-être</small></button>
+      <button type="button" class="tri-btn" data-tri="deleguer"><b>Déléguer</b><small>quelqu'un d'autre</small></button>
+    </div>
+    <div class="tri-delegue" id="triDelegue" hidden>
+      <input id="triQui" type="text" maxlength="40" placeholder="À qui ? (nom)" autocomplete="off">
+      <button type="button" class="btn-valider" data-tri="deleguer-ok">Confier · suivi dans 2 jours</button>
+    </div>
+    <button type="button" class="lien-discret" id="triAnnuler" data-tri="annuler" hidden>↶ Annuler la dernière décision</button>
+  </div>
+</div>
+
+<!-- Mode Focus -->
+<div class="overlay plein focus" id="overlayFocus">
+  <div class="plein-boite">
+    <div class="plein-tete">
+      <div class="micro"><i class="carre"></i>Focus · une seule chose à la fois</div>
+      <button class="btn-icone" type="button" data-focus="reduire" aria-label="Réduire">–</button>
+    </div>
+    <div class="focus-phase" id="focusPhase"></div>
+    <h2 class="focus-titre" id="focusTitre"></h2>
+    <div class="focus-anneau">
+      <svg viewBox="0 0 240 240" aria-hidden="true"><circle class="fa-fond" cx="120" cy="120" r="108"/><circle class="fa-arc" id="focusArc" cx="120" cy="120" r="108"/></svg>
+      <div class="focus-temps" id="focusTemps">25:00</div>
+    </div>
+    <div class="focus-cycles" id="focusCycles"></div>
+    <div class="focus-reel" id="focusReel"></div>
+    <div class="loi" id="focusLoi"></div>
+    <div class="focus-actions">
+      <button type="button" class="btn-valider grand" data-focus="lecture" id="focusLecture">Démarrer</button>
+      <div class="focus-secondaires">
+        <button type="button" class="btn-annuler" data-focus="passer">Passer</button>
+        <button type="button" class="btn-annuler" data-focus="terminer">Tâche terminée ✓</button>
+      </div>
+      <button type="button" class="lien-discret" data-focus="quitter">Quitter le Focus</button>
     </div>
   </div>
 </div>
@@ -172,18 +242,38 @@
       <input id="prefPrenom" type="text" maxlength="30" placeholder="Ton prénom (facultatif)" autocomplete="off" aria-label="Prénom">
     </div>
 
-    <div class="reglage-titre">Apparence</div>
-    <div class="theme-modes" role="group" aria-label="Thème">
-      <button class="theme-mode" data-mode="auto" type="button">Auto</button>
-      <button class="theme-mode" data-mode="clair" type="button">Clair</button>
-      <button class="theme-mode" data-mode="sombre" type="button">Sombre</button>
+    <div class="reglage-titre">Journée de travail · règle 60/40</div>
+    <div class="heures">
+      <label><span>Début</span><input id="prefDebut" type="time"></label>
+      <label><span>Fin</span><input id="prefFin" type="time"></label>
     </div>
-    <div class="theme-titre">Couleur d'accent</div>
-    <div class="theme-accents" id="themeAccents" role="group" aria-label="Couleur d'accent"></div>
+    <div class="aide" id="infoJournee"></div>
+    <div class="theme-titre">Marge sur les durées (loi de Hofstadter)</div>
+    <div class="seg seg-3" role="group" aria-label="Marge">
+      <button type="button" data-marge="20">+20 %</button>
+      <button type="button" data-marge="30">+30 %</button>
+      <button type="button" data-marge="50">+50 %</button>
+    </div>
+
+    <div class="theme-titre">Mode Focus (Pomodoro)</div>
+    <div class="seg seg-2" role="group" aria-label="Durée Pomodoro">
+      <button type="button" data-pomodoro="25">25 min · pause 5</button>
+      <button type="button" data-pomodoro="50">50 min · pause 10</button>
+    </div>
+
+    <div class="reglage-titre">Apparence</div>
+    <div class="seg seg-3" role="group" aria-label="Thème">
+      <button type="button" data-mode="sombre">Sombre</button>
+      <button type="button" data-mode="clair">Clair</button>
+      <button type="button" data-mode="auto">Auto</button>
+    </div>
+    <div class="theme-titre">Couleur principale</div>
+    <div class="couleurs" id="couleurs" role="group" aria-label="Couleur principale"></div>
+    <div class="couleur-nom" id="couleurNom"></div>
     <div class="theme-titre">Taille du texte</div>
-    <div class="theme-modes" role="group" aria-label="Taille du texte">
-      <button class="theme-mode reg-texte" data-texte="normal" type="button">Normal</button>
-      <button class="theme-mode reg-texte" data-texte="grand" type="button">Grand</button>
+    <div class="seg seg-2" role="group" aria-label="Taille du texte">
+      <button type="button" data-texte="normal">Normal</button>
+      <button type="button" data-texte="grand">Grand</button>
     </div>
 
     <div class="reglage-titre">Suivi</div>
@@ -191,7 +281,7 @@
       <span><b>Objectif quotidien</b><small id="infoObjectif"></small></span><span class="chevron" aria-hidden="true">›</span>
     </button>
     <label class="ligne-reglage">
-      <span><b>Ajout rapide</b><small>Ajouter directement, sans ouvrir la fiche complète</small></span>
+      <span><b>Ajout rapide</b><small>Ajouter directement, sans ouvrir la fiche</small></span>
       <input type="checkbox" class="interrupteur" id="prefAjoutRapide">
     </label>
     <label class="ligne-reglage">
@@ -207,7 +297,7 @@
     </div>
 
     <div class="reglage-titre">Sauvegarde et données</div>
-    <div class="sub sub-reglage">Tes tâches sont stockées dans ce navigateur. Exporte-les de temps en temps (changement de téléphone, données effacées…). Les tâches archivées restent comptées dans l'Analyse.</div>
+    <div class="sub sub-reglage">Tes tâches sont stockées dans ce navigateur. Exporte-les de temps en temps (changement de téléphone, données effacées…).</div>
     <div class="modal-actions col compact">
       <button class="btn-valider" id="btnExport" type="button">Exporter mes tâches</button>
       <button class="btn-annuler" id="btnExportChiffre" type="button">Exporter (chiffré par mot de passe)</button>
@@ -222,7 +312,7 @@
     <div class="reglage-titre">Application</div>
     <div class="modal-actions col compact">
       <button class="btn-annuler" id="btnMajApp" type="button">Mettre à jour l'application</button>
-      <button class="btn-annuler" id="btnResetPrefs" type="button">Réinitialiser l'apparence</button>
+      <button class="btn-annuler" id="btnResetPrefs" type="button">Réinitialiser les réglages</button>
     </div>
     <div class="version-app">Version <span id="versionApp"></span></div>
 
@@ -234,7 +324,7 @@
 <div class="overlay" id="overlayObjectif">
   <div class="modal"><div class="sheet-grabber"></div>
     <h3>Objectif quotidien</h3>
-    <div class="sub">Nombre de tâches que tu veux terminer chaque jour. Il sert à colorer la carte de chaleur et à suivre ta progression.</div>
+    <div class="sub">Nombre de tâches que tu veux terminer chaque jour. Il colore la carte de régularité du Bilan.</div>
     <div class="objectif-stepper">
       <button type="button" id="objMoins" aria-label="Diminuer">−</button>
       <input id="objValeur" type="number" inputmode="numeric" min="1" max="50" aria-label="Tâches par jour">
@@ -272,8 +362,8 @@
 <!-- Écran de verrouillage -->
 <div class="ecran-verrou" id="ecranVerrou" role="dialog" aria-modal="true" aria-labelledby="verrouTitre">
   <div class="verrou-boite">
-    <div class="verrou-icone" aria-hidden="true">🔒</div>
-    <h2 id="verrouTitre">Mes tâches</h2>
+    <div class="verrou-carre" aria-hidden="true"></div>
+    <h2 id="verrouTitre">Momo Tâches</h2>
     <div class="sub">Entre ton code PIN</div>
     <input type="password" id="verrouInput" inputmode="numeric" autocomplete="off" maxlength="8" aria-label="Code PIN">
     <div class="erreur-champ" id="verrouErreur" role="alert"></div>
@@ -283,7 +373,7 @@
 </div>
 
 <input type="file" id="fichierImport" accept="application/json,.json" hidden>
-<button class="fab" id="fab" type="button" aria-label="Ajouter une tâche"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+<button class="fab" id="fab" type="button" aria-label="Ajouter une tâche"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="js/helpers.js"></script>
@@ -292,13 +382,17 @@
 <script src="js/storage.js"></script>
 <script src="js/rappels.js"></script>
 <script src="js/render.js"></script>
-<script src="js/recurrentes.js"></script>
-<script src="js/stock.js"></script>
+<script src="js/methode.js"></script>
+<script src="js/bilan.js"></script>
 <script src="js/courbe.js"></script>
 <script src="js/events.js"></script>
 <script src="js/gestes.js"></script>
 <script src="js/reglages.js"></script>
+<script src="js/capture.js"></script>
+<script src="js/planifier.js"></script>
+<script src="js/focus.js"></script>
 <script src="js/securite.js"></script>
 <script src="js/app.js"></script>
+<script src="js/accueil.js"></script>
 </body>
 </html>
