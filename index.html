@@ -234,7 +234,9 @@
 
 <!-- Présentation de l'application (presentation.html) -->
 <div class="overlay-pres" id="overlayPresentation" role="dialog" aria-modal="true" aria-label="Présentation de Tâches">
-  <iframe id="presCadre" title="Présentation de Tâches" allow="autoplay"></iframe>
+  <video id="presVideo" playsinline controls preload="none" poster="icons/icon-512.png"></video>
+  <iframe id="presCadre" title="Présentation de Tâches (version animée)" hidden></iframe>
+  <button class="pres-bascule" type="button" data-pres="animee" id="presBascule">Version animée</button>
   <button class="pres-fermer" type="button" data-pres="fermer" aria-label="Fermer la présentation">✕</button>
 </div>
 
@@ -245,7 +247,7 @@
     <div class="sub">Tout reste sur cet appareil.</div>
     <button class="bloc-pres" type="button" data-act="presentation">
       <span class="bloc-pres-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></span>
-      <span class="bloc-pres-txt"><b>Découvrir Tâches</b><small>Présentation animée · 57 s</small></span>
+      <span class="bloc-pres-txt"><b>Découvrir Tâches</b><small>Vidéo de présentation · 57 s</small></span>
       <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
     </button>
 

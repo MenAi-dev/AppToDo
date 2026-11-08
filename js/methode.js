@@ -221,7 +221,7 @@ function htmlJourListe(){
     return `<div class="vide"><b>Journée vide</b>1 grande, 3 moyennes, 5 petites.</div>
       <button class="bloc-pres" type="button" data-act="presentation">
         <span class="bloc-pres-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></span>
-        <span class="bloc-pres-txt"><b>Découvrir Tâches</b><small>Présentation animée · 57 s</small></span>
+        <span class="bloc-pres-txt"><b>Découvrir Tâches</b><small>Vidéo de présentation · 57 s</small></span>
         ${ic('chevron')}
       </button>`;
   }

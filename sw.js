@@ -1,6 +1,6 @@
 // Pense à changer ce numéro à chaque modification des fichiers,
 // sinon les anciens fichiers restent servis depuis le cache.
-const CACHE_NAME = 'momo-taches-cache-v42';
+const CACHE_NAME = 'momo-taches-cache-v43';
 const URLS_A_METTRE_EN_CACHE = [
   './',
   './index.html',
@@ -54,6 +54,8 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+  // La vidéo de présentation (12 Mo) n'est pas mise en cache : le navigateur la lit directement en streaming
+  if (new URL(event.request.url).pathname.endsWith('.mp4')) return;
   event.respondWith(
     caches.match(event.request, { ignoreSearch: true }).then(rep => {
       if (rep) return rep;

@@ -2,7 +2,7 @@
 // marge d'estimation, vibrations, ajout rapide, objectif, données, application.
 // Tout est mémorisé sur l'appareil (clé « todoTheme »). js/precoce.js (dans <head>) pose déjà le thème avant l'affichage.
 const THEME_CLE = 'todoTheme';
-const VERSION_APP = 'v42';
+const VERSION_APP = 'v43';
 const MARGES = [20, 30, 50];
 const heureValide = h => typeof h === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(h);
 // Couleurs système d'Apple (la valeur exacte, claire ou sombre, est dans css/ios.css) : [clé, nom, aperçu]
@@ -97,22 +97,47 @@ function ouvrirReglages(){
 }
 function fermerReglages(){ $('overlayReglages').classList.remove('actif'); }
 
-// ---------- Présentation animée de l'application (presentation.html, en plein écran) ----------
+// ---------- Présentation de l'application (plein écran) ----------
+// Par défaut : la vidéo (voix off + musique, lue en streaming). Sans connexion ou si elle ne se charge pas :
+// la version animée (presentation.html, disponible hors ligne). Un bouton permet de passer de l'une à l'autre.
+const VIDEO_PRES = 'video/presentation.mp4';
+function montrerVersion(animee){
+  const v = $('presVideo'), f = $('presCadre');
+  v.hidden = animee; f.hidden = !animee;
+  if(animee){ v.pause(); if(!f.getAttribute('src') || f.getAttribute('src') === 'about:blank') f.src = 'presentation.html'; }
+  else { f.src = 'about:blank'; v.play().catch(() => {}); }
+  $('presBascule').textContent = animee ? 'Vidéo' : 'Version animée';
+  $('presBascule').hidden = animee && !navigator.onLine; // hors ligne : la vidéo n'est pas disponible
+  $('presBascule').dataset.pres = animee ? 'video' : 'animee';
+}
 function ouvrirPresentation(){
   fermerReglages();
-  $('presCadre').src = 'presentation.html';
+  const v = $('presVideo');
   $('overlayPresentation').classList.add('actif');
   vibrer(8);
+  if(!navigator.onLine){ montrerVersion(true); return; }
+  if(!v.getAttribute('src')) v.src = VIDEO_PRES;
+  v.currentTime = 0;
+  montrerVersion(false);
 }
 function fermerPresentation(){
   const o = $('overlayPresentation');
   if(!o.classList.contains('actif')) return;
   o.classList.remove('actif');
+  $('presVideo').pause();
   setTimeout(() => { $('presCadre').src = 'about:blank'; }, 300); // arrête l'animation
 }
+// La vidéo ne se charge pas (réseau coupé, fichier absent) : on bascule sur la version animée
+$('presVideo').addEventListener('error', () => { if($('overlayPresentation').classList.contains('actif')) montrerVersion(true); });
+// Fin de la vidéo : on referme tout seul après un instant
+$('presVideo').addEventListener('ended', () => setTimeout(fermerPresentation, 1200));
 document.addEventListener('click', e => {
   if(e.target.closest('[data-act="presentation"]')){ ouvrirPresentation(); return; }
-  if(e.target.closest('[data-pres="fermer"]')) fermerPresentation();
+  const b = e.target.closest('[data-pres]');
+  if(!b) return;
+  if(b.dataset.pres === 'fermer') fermerPresentation();
+  else if(b.dataset.pres === 'animee') montrerVersion(true);
+  else if(b.dataset.pres === 'video'){ if(!$('presVideo').getAttribute('src')) $('presVideo').src = VIDEO_PRES; montrerVersion(false); }
 });
 document.addEventListener('keydown', e => { if(e.key === 'Escape') fermerPresentation(); });
 
