@@ -588,3 +588,6 @@ header .micro .carre{display:none;}
 .a-coche{fill:none; stroke:#fff; stroke-width:4; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:40; stroke-dashoffset:40; animation:aCoche .5s 1s ease forwards;}
 @keyframes aCoche{ to{ stroke-dashoffset:0; } }
 @media(max-width:360px){ .lois{grid-template-columns:repeat(2, 1fr);} }
+/* Changement de style (One UI <-> Apple) : léger fondu */
+body.change-style .wrap, body.change-style .nav, body.change-style .modal{animation:changeStyle .45s ease both;}
+@keyframes changeStyle{ from{ opacity:.35; filter:blur(3px); } }

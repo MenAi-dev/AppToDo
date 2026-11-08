@@ -2,7 +2,7 @@
 // marge d'estimation, vibrations, ajout rapide, objectif, données, application.
 // Tout est mémorisé sur l'appareil (clé « todoTheme »). js/precoce.js (dans <head>) pose déjà le thème avant l'affichage.
 const THEME_CLE = 'todoTheme';
-const VERSION_APP = 'v39';
+const VERSION_APP = 'v40';
 const MARGES = [20, 30, 50];
 const heureValide = h => typeof h === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(h);
 // Couleurs système d'Apple (la valeur exacte, claire ou sombre, est dans css/ios.css) : [clé, nom, aperçu]
@@ -11,13 +11,14 @@ const COULEURS = [
   ['rouge','Rouge','#FF453A'], ['orange','Orange','#FF9F0A'], ['vert','Vert','#30D158'], ['menthe','Menthe','#63E6E2'],
   ['sarcelle','Sarcelle','#40C8E0'], ['cyan','Cyan','#64D2FF'], ['marron','Marron','#AC8E68']
 ];
-const reglagesTheme = { mode:'sombre', couleur:'indigo', texte:'normal', prenom:'', vibrations:true, ajoutRapide:false, debut:'08:00', fin:'17:00', marge:30, pomodoro:25 };
+const reglagesTheme = { style:'oneui', mode:'sombre', couleur:'indigo', texte:'normal', prenom:'', vibrations:true, ajoutRapide:false, debut:'08:00', fin:'17:00', marge:30, pomodoro:25 };
 
 // Accepte n'importe quoi (stockage modifié, fichier de sauvegarde…) et corrige les valeurs invalides
 function nettoyerReglages(t){
   t = (t && typeof t === 'object') ? t : {};
   const debut = heureValide(t.debut) ? t.debut : '08:00', fin = heureValide(t.fin) && t.fin > debut ? t.fin : '17:00';
   return {
+    style: t.style === 'apple' ? 'apple' : 'oneui', // style de l'interface : One UI (Samsung) ou Apple (iOS)
     mode: ['auto','clair','sombre'].includes(t.mode) ? t.mode : 'sombre',
     couleur: COULEURS.some(c => c[0] === t.couleur) ? t.couleur : 'indigo',
     texte: t.texte === 'grand' ? 'grand' : 'normal',
@@ -50,6 +51,11 @@ function texteEntete(dateTxt){
 function appliquerTheme(){
   const r = document.documentElement, clair = themeClair();
   r.dataset.theme = clair ? 'clair' : 'sombre';
+  // Style : la couche One UI se pose sur la couche Apple ; en « Apple », on la retire
+  r.dataset.style = reglagesTheme.style;
+  const feuille = $('cssOneui');
+  if(feuille) feuille.disabled = reglagesTheme.style !== 'oneui';
+  document.querySelectorAll('[data-style-choix]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.styleChoix === reglagesTheme.style)));
   delete r.dataset.accent; // ancien réglage de couleur (remplacé par data-couleur)
   r.dataset.couleur = reglagesTheme.couleur;
   document.querySelectorAll('[data-couleur-choix]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.couleurChoix === reglagesTheme.couleur)));
@@ -111,6 +117,15 @@ function fermerReglages(){ $('overlayReglages').classList.remove('actif'); }
     else if(m) reglagesTheme.mode = m.dataset.mode;
     else if(g) reglagesTheme.marge = Number(g.dataset.marge);
     else if(p) reglagesTheme.pomodoro = Number(p.dataset.pomodoro);
+    else if(e.target.closest('[data-style-choix]')){
+      const s = e.target.closest('[data-style-choix]').dataset.styleChoix;
+      if(s === reglagesTheme.style) return;
+      reglagesTheme.style = s;
+      // Léger fondu pendant le changement de style
+      document.body.classList.remove('change-style'); void document.body.offsetWidth; document.body.classList.add('change-style');
+      vibrer(8);
+      toast(s === 'oneui' ? 'Style One UI' : 'Style Apple');
+    }
     else return;
     Object.assign(reglagesTheme, nettoyerReglages(reglagesTheme));
     enregistrerTheme(); appliquerTheme(); majInfoJournee();

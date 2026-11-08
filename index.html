@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Momo Tâches</title>
-<script src="js/precoce.js"></script>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
@@ -18,7 +17,8 @@
 <link rel="stylesheet" href="css/modals.css">
 <link rel="stylesheet" href="css/design.css">
 <link rel="stylesheet" href="css/ios.css">
-<link rel="stylesheet" href="css/oneui.css">
+<link rel="stylesheet" href="css/oneui.css" id="cssOneui">
+<script src="js/precoce.js"></script>
 </head>
 <body data-vue="afaire">
 <!-- Écran de bienvenue au lancement (js/accueil.js) -->
@@ -263,6 +263,12 @@
     </div>
 
     <div class="reglage-titre">Apparence</div>
+    <div class="theme-titre">Style</div>
+    <div class="seg seg-2 seg-style" role="group" aria-label="Style de l'interface">
+      <button type="button" data-style-choix="oneui">One UI</button>
+      <button type="button" data-style-choix="apple">Apple</button>
+    </div>
+    <div class="theme-titre">Thème</div>
     <div class="seg seg-3" role="group" aria-label="Thème">
       <button type="button" data-mode="sombre">Sombre</button>
       <button type="button" data-mode="clair">Clair</button>
