@@ -1,6 +1,6 @@
 // Pense à changer ce numéro à chaque modification des fichiers,
 // sinon les anciens fichiers restent servis depuis le cache.
-const CACHE_NAME = 'momo-taches-cache-v38';
+const CACHE_NAME = 'momo-taches-cache-v39';
 const URLS_A_METTRE_EN_CACHE = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const URLS_A_METTRE_EN_CACHE = [
   './css/modals.css',
   './css/design.css',
   './css/ios.css',
+  './css/oneui.css',
   './fonts/inter-latin.woff2',
   './js/precoce.js',
   './js/helpers.js',

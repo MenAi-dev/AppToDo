@@ -2,7 +2,7 @@
 // marge d'estimation, vibrations, ajout rapide, objectif, données, application.
 // Tout est mémorisé sur l'appareil (clé « todoTheme »). js/precoce.js (dans <head>) pose déjà le thème avant l'affichage.
 const THEME_CLE = 'todoTheme';
-const VERSION_APP = 'v38';
+const VERSION_APP = 'v39';
 const MARGES = [20, 30, 50];
 const heureValide = h => typeof h === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(h);
 // Couleurs système d'Apple (la valeur exacte, claire ou sombre, est dans css/ios.css) : [clé, nom, aperçu]

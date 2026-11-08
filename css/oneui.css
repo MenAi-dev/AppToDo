@@ -1,274 +1,123 @@
 /* ==========================================================================
-   Thème One UI (Samsung) — repris de l'application Budget. Chargé en dernier : il redéfinit formes et surfaces.
-   Principes : cartes très arrondies sans bordure · barre de navigation flottante en bas (zone de pouce)
-   · une couleur = un sens (vert = fait, orange = retard/attention, rouge = suppression, accent = action).
-   La couleur d'accent (--bleu) reste celle choisie dans les Réglages.
+   Couche One UI (Samsung) — chargée après ios.css. Même structure, même méthode, mêmes couleurs.
+   One UI : grand titre placé bas (zone du pouce), cartes très arrondies, boutons en pilule,
+   barre de navigation flottante avec pastille, sélecteurs en pilules colorées, police système Samsung.
    ========================================================================== */
+:root{ --r-carte:26px; --r-btn:999px; --r-petit:16px; }
+:root[data-theme="sombre"]{ --papier:#000000; --carte:#171717; --carte-2:#232323; --carte-3:#2E2E2E; --champ:#232323; --fond-feuille:#171717; --separateur:rgba(255,255,255,0.08); }
+:root[data-theme="clair"]{ --papier:#F4F4F4; --carte:#FCFCFC; --carte-2:#EEEEEE; --carte-3:#E3E3E3; --champ:#EFEFEF; --fond-feuille:#F7F7F7; --separateur:rgba(0,0,0,0.07); }
 
-:root{
-  --noir-2:#17171B;
-  --noir-3:#25252B;
-  --gris:#9C9CA6;
-  --gris-2:#B4B4BD;
-  --ligne:rgba(255,255,255,0.08);
-  --piste:rgba(255,255,255,0.10);
-  --ombre:0 10px 30px rgba(0,0,0,0.35);
-  --rayon:28px;
-  --rayon-sm:20px;
-}
-:root[data-theme="clair"]{
-  --noir:#F2F3F7;
-  --noir-2:#FFFFFF;
-  --noir-3:#ECEDF2;
-  --gris:#6A6D78;
-  --gris-2:#555862;
-  --ligne:rgba(0,0,0,0.08);
-  --piste:rgba(0,0,0,0.08);
-  --ombre:0 8px 24px rgba(30,40,80,0.12);
-}
-:root[data-texte="grand"]{font-size:112.5%;}
-html{-webkit-tap-highlight-color:transparent;}
-
-/* ---------- Page, police, en-tête ---------- */
 body{
-  /* system-ui = la vraie police One UI sur un Samsung ; Inter (hébergée) en repli ailleurs. */
-  font-family:system-ui, 'Samsung One UI Sans', 'SamsungOne', Roboto, 'Inter', 'Helvetica Neue', Arial, sans-serif;
-  padding:calc(env(safe-area-inset-top, 0px) + 28px) 16px calc(132px + env(safe-area-inset-bottom, 0px));
+  font-family:'SamsungOne', 'Samsung Sans', 'One UI Sans', system-ui, Roboto, 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing:-0.005em;
+  padding:calc(env(safe-area-inset-top, 0px) + 12px) 14px calc(118px + env(safe-area-inset-bottom, 0px));
 }
-@font-face{
-  font-family:'Inter'; font-style:normal; font-weight:400 800; font-display:swap;
-  src:url('../fonts/inter-latin.woff2') format('woff2');
-  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+.index, header h1, .g-titre, .modal h3, .vide b, .sous-titre, .courbe-valeur, .stat-tuile .valeur, .verrou-boite h2, .loi-nom, .sp-nom, .sp-question, .tri-titre, .focus-titre, .etape-titre{
+  font-family:'SamsungOne', 'Samsung Sans', 'One UI Sans', system-ui, Roboto, 'Inter', sans-serif;
 }
-header{flex-wrap:nowrap; align-items:flex-end; gap:12px; margin-bottom:20px; padding:10px 4px 0;}
-header > div:first-child{flex:1; min-width:0;}
-header h1{font-size:2.4rem; font-weight:700; letter-spacing:-0.03em; line-height:1.1;}
-header p{font-size:0.95rem; margin-top:6px;}
-.header-actions{flex:none;}
-.btn-icone{
-  display:grid; place-items:center; width:48px; height:48px; border:none; border-radius:50%; cursor:pointer; padding:0;
-  background:color-mix(in srgb, var(--bleu) 16%, transparent); color:var(--bleu-clair);
-  transition:background .15s, transform .15s var(--spring);
-}
-.btn-icone:hover{background:color-mix(in srgb, var(--bleu) 26%, transparent);}
-.btn-icone:active{transform:scale(.93);}
-.wrap{max-width:640px;}
 
-/* ---------- Carte résumé : sa couleur raconte l'état ---------- */
-.resume{
-  --etat:var(--bleu);
-  position:relative; overflow:hidden; border:none; border-radius:var(--rayon); padding:26px 24px; margin-bottom:14px;
-  background:radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--etat) 26%, transparent) 0%, transparent 62%), var(--noir-2);
-}
-.resume[data-etat="retard"]{--etat:var(--orange);}
-.resume[data-etat="fini"]{--etat:var(--vert);}
-.resume .valeur{font-size:2.9rem; letter-spacing:-0.035em; color:var(--etat);}
-.barre{height:10px; border-radius:980px; background:var(--piste);}
-.barre-fill{border-radius:980px; background:var(--etat); box-shadow:0 0 14px color-mix(in srgb, var(--etat) 45%, transparent);}
-.barre-fill.complet{background:var(--vert);}
-.message-etat{
-  display:flex; align-items:flex-start; gap:12px; margin-top:16px; padding:13px 15px;
-  border-radius:20px; font-size:0.88rem; font-weight:600; line-height:1.4;
-  background:color-mix(in srgb, var(--etat) 14%, transparent);
-}
-.message-etat::before{
-  content:''; flex:none; width:10px; height:10px; margin-top:0.4em; border-radius:50%;
-  background:var(--etat); box-shadow:0 0 0 5px color-mix(in srgb, var(--etat) 24%, transparent);
-}
-.message-etat:empty{display:none;}
+/* ---------- Grand titre One UI : placé bas, beaucoup d'air au-dessus ---------- */
+header{flex-direction:column; align-items:flex-start; gap:0; margin:0 0 26px; padding:clamp(48px, 16vh, 150px) 8px 0; position:relative;}
+.entete-txt{order:2;}
+header h1{margin:0; font-size:2.6rem; font-weight:700; letter-spacing:-0.02em; line-height:1.1;}
+#dateJour{margin-top:8px; font-size:0.95rem; order:3;}
+header .entete-txt{display:flex; flex-direction:column;}
+header .entete-txt .micro{order:2; margin-top:8px;}
+header .entete-txt h1{order:1;}
+.header-actions{position:absolute; top:4px; right:0; gap:4px;}
+.btn-icone{width:44px; height:44px; background:transparent; color:var(--encre);}
+.btn-icone:hover{background:var(--remplissage); color:var(--encre);}
+.btn-icone.actif{background:var(--indigo); color:var(--sur-indigo);}
 
-/* ---------- Ajout rapide : carte arrondie ---------- */
-.ajout{border:none; border-radius:var(--rayon); padding:14px 14px 14px 20px; margin-bottom:26px;}
-.ajout-ligne input{font-size:1.05rem;}
-.btn-plus{width:46px; height:46px; box-shadow:0 4px 12px color-mix(in srgb, var(--bleu) 40%, transparent);}
-.chip{padding:9px 15px; font-size:0.82rem;}
-.apercu{border-radius:18px;}
+/* ---------- Cartes très arrondies ---------- */
+.carte, .courbe, .graphique, .chaleur, .groupe-liste, .groupe-liste.stat-liste, .choix, .checklist, .capture-liste, .reports,
+.stat-tuile, .stat-tuile:nth-child(odd), .stat-tuile:nth-child(even), .objectif, .theme-jour, .bandeau, .rappel-item, .journee{border-radius:var(--r-carte);}
+.carte, .journee, .courbe{padding:20px;}
+.grenouille, .grenouille.tache{border-radius:var(--r-carte); padding:22px 22px 20px;}
+.grenouille.vide-g{border-radius:var(--r-carte);}
+.groupe-titre{margin:0 12px 10px; font-size:0.85rem; font-weight:700; color:var(--gris);}
+.tache{padding:17px 18px;}
+.tache-titre{font-size:1.03rem; font-weight:500;}
+.coche{width:24px; height:24px; border-width:2px;}
+.prio{border-radius:7px;}
+.pill-action, .pill-report, .voir-plus, .btn-tri, .lien-minimal, .g-focus, .filtre-cat, .puce-tache, .tri-btn{border-radius:var(--r-btn);}
+.voir-plus{padding:15px;}
+.btn-tri{padding:16px 20px;}
+.btn-tri-n{border-radius:999px;}
+.tri-btn{align-items:center; text-align:center; padding:12px 8px;}
+.btn-focus{width:36px; height:36px;}
+.f135-n{border-radius:12px; width:30px; height:30px;}
+.f135-cases .c{height:10px; border-radius:6px;}
+.jauge-piste{height:10px; border-radius:6px;}
+.jauge-prevu, .jauge-fait{border-radius:6px;}
+.loi-carte{border-radius:22px; min-height:96px;}
+.loi-panneau{border-radius:30px;}
+.loi-illu{border-radius:20px;}
+.etape{border-radius:16px;}
+.citation{border-radius:20px;}
+.bloc{border-radius:12px;}
+.tri-carte{border-radius:30px;}
 
-/* ---------- En-tête de section : titre de la vue + recherche ---------- */
-.section-tete{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 4px 14px;}
-.section-titre{margin:0; font-size:1.3rem; font-weight:700; letter-spacing:-0.02em;}
-.btn-recherche{
-  width:44px; height:44px; border:none; border-radius:50%; background:var(--noir-2); color:var(--gris-2);
-  display:grid; place-items:center; aspect-ratio:auto; padding:0; -webkit-backdrop-filter:none; backdrop-filter:none;
-}
-.btn-recherche.actif{background:var(--bleu); color:var(--blanc);}
-.btn-recherche[hidden]{display:none;}
-.zone-recherche{border:none; border-radius:22px; background:var(--noir-2); margin:-4px 0 14px; padding:0 8px 0 18px;}
-.filtres-cat{margin:0 0 18px;}
-.filtre-cat, .filtres-journal .filtre-cat{padding:9px 16px;}
+/* ---------- Champs ---------- */
+.ajout, .capture-form, .zone-recherche{border-radius:var(--r-carte); padding:8px 8px 8px 20px;}
+.btn-plus{width:40px; height:40px;}
+.champ input, .champ select, .champ textarea, .heures input, .tri-delegue input, .theme-ligne input, .verrou-boite input, .sp-form input{border-radius:18px; padding:14px 16px;}
+.champ > label, .champ label:first-child:not(.duree-libre), .heures label{font-size:0.85rem; font-weight:700; text-transform:none; color:var(--gris);}
+.reglage-titre{font-size:0.85rem; font-weight:700; text-transform:none; color:var(--indigo-fonce); margin:28px 8px 10px;}
 
-/* ---------- Barre de navigation flottante (zone de pouce) ---------- */
-.nav{
-  position:fixed; top:auto; left:50%; right:auto; transform:translateX(-50%);
-  bottom:calc(12px + env(safe-area-inset-bottom, 0px));
-  width:min(calc(100% - 24px), 520px); max-width:none; margin:0; overflow:visible;
-  display:grid; grid-template-columns:repeat(5, 1fr); gap:2px; padding:6px;
-  border:none; border-radius:34px;
-  background:color-mix(in srgb, var(--noir-2) 84%, transparent);
-  -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%);
-  box-shadow:var(--ombre), 0 0 0 1px var(--ligne);
-  z-index:40;
-}
-.nav-btn{
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
-  padding:9px 2px 8px; min-height:58px; border-radius:28px; min-width:0;
-  font-size:0.64rem; font-weight:600; color:var(--gris);
-}
-.nav-ico{width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round;}
-.nav-btn:hover{color:var(--texte);}
-.nav-btn.actif{color:var(--bleu-clair);}
-.nav-fond{border-radius:28px;}
-.nav-btn.actif .nav-fond{background:color-mix(in srgb, var(--bleu) 20%, transparent);}
-.nav-txt{display:flex; flex-direction:column; align-items:center; gap:0; line-height:1.15; white-space:nowrap;}
-.nav-n{margin:0; font-size:0.62rem; opacity:.75; min-height:0.75em;}
-.nav-n:empty{display:none;}
+/* ---------- Sélecteurs One UI : pilules, la valeur choisie est colorée ---------- */
+.seg{border-radius:999px; padding:4px; gap:4px; background:var(--remplissage-2);}
+.seg button{border-radius:999px; padding:9px 10px; font-weight:700; color:var(--gris);}
+.seg button[aria-pressed="true"]{background:var(--indigo); color:var(--sur-indigo); box-shadow:none;}
+.seg-mini button{padding:7px 6px;}
+.puces-duree button{border-radius:999px; padding:9px 0;}
+.puces-duree button[aria-pressed="true"]{background:var(--indigo); color:var(--sur-indigo);}
 
-/* Bouton « + » flottant, au-dessus de la barre : visible seulement quand le formulaire d'ajout est hors de l'écran */
-.fab{
-  right:max(18px, calc(50% - 320px)); bottom:calc(98px + env(safe-area-inset-bottom, 0px));
-  width:56px; height:56px; border-radius:20px;
-  opacity:0; transform:scale(.8); pointer-events:none;
-  transition:opacity .2s, transform .25s var(--spring);
-}
-.fab.visible{opacity:1; transform:none; pointer-events:auto;}
-.fab.visible:active{transform:scale(.92);}
-.toast{
-  --t:var(--bleu);
-  bottom:calc(104px + env(safe-area-inset-bottom, 0px));
-  width:max-content; max-width:min(92vw, 420px); padding:14px 20px; border:none; border-radius:22px; gap:10px;
-  background:color-mix(in srgb, var(--t) 20%, var(--noir-2));
-  box-shadow:var(--ombre), inset 0 0 0 1.5px color-mix(in srgb, var(--t) 55%, transparent);
-}
-.toast.succes{--t:var(--vert);}
-.toast.alerte{--t:var(--orange); border:none; color:var(--texte);}
-.toast.danger{--t:var(--rouge); border:none; color:var(--texte);}
-.toast button{color:var(--texte); text-decoration:underline; text-underline-offset:3px;}
-
-/* ---------- Cartes et listes : grandes, sans bordure ---------- */
-.groupe-liste, .stat-tuile, .graphique, .chaleur, .objectif{border:none; border-radius:var(--rayon);}
-.groupe-titre{margin:0 6px 12px;}
-.tache{padding:15px 14px 15px 18px;}
-.tache:first-child{border-top:none;}
-.coche{width:28px; height:28px;}
-.icone{width:36px; height:36px; border:none; border-radius:50%; background:var(--noir-3); font-size:0.9rem;}
-.etoile{font-size:1.35rem; padding:6px 7px;}
-.pill-report, .lien-discret{min-height:32px;}
-.objectif{padding:18px 20px;}
-.objectif-piste{height:10px; border-radius:980px;}
-.objectif-fill{border-radius:980px;}
-.reporter{margin-top:10px;}
-.rappel-item{border-radius:22px;}
-.vide{padding:56px 24px;}
-
-/* ---------- Fenêtres : feuille du bas One UI ---------- */
-.overlay{background:rgba(0,0,0,0.45);}
-.modal{border:none; border-radius:32px 32px 0 0; padding:12px 22px calc(26px + env(safe-area-inset-bottom, 0px));}
-@media(min-width:640px){ .modal{border-radius:32px; padding:28px 26px; max-width:440px;} }
-.sheet-grabber{background:var(--piste); width:40px;}
-.modal h3{font-size:1.2rem;}
-.champ input, .champ select, .champ textarea, .verrou-boite input{border-radius:18px; padding:15px 16px; font-size:1rem;}
-.modal-actions button{padding:15px 0; font-size:0.95rem;}
-.erreur-champ{color:var(--rouge); font-size:0.8rem; min-height:1.1em; margin-top:2px;}
-
-/* ---------- Réglages ---------- */
-#overlayReglages .modal{max-height:92vh;}
-.reglage-titre{margin:22px 0 8px; font-size:0.84rem; font-weight:700; color:var(--texte);}
-.reglage-titre:first-of-type{margin-top:6px;}
-.champ-seul{margin-bottom:0;}
-.sub-reglage{margin:0 0 10px !important; font-size:0.8rem;}
-#overlayReglages .theme-modes{border-radius:22px; padding:4px; gap:4px;}
-#overlayReglages .theme-mode{border-radius:18px; padding:13px 0; min-height:48px;}
-#overlayReglages .theme-mode.actif{background:var(--bleu); color:var(--blanc); box-shadow:none;}
-.theme-titre{margin:14px 0 8px;}
-.theme-accents{display:flex; flex-wrap:wrap; gap:14px; padding:4px 2px 6px;}
-.theme-accent{width:44px; height:44px; aspect-ratio:auto;}
-.ligne-reglage{
-  display:flex; align-items:center; justify-content:space-between; gap:16px; width:100%;
-  margin-top:10px; padding:14px 0 4px; border:none; border-top:1px solid var(--ligne); background:none; color:var(--texte);
-  font:inherit; text-align:left; cursor:pointer;
-}
-.ligne-reglage b{display:block; font-size:0.95rem; font-weight:600;}
-.ligne-reglage small{display:block; margin-top:2px; color:var(--gris); font-size:0.78rem;}
-.ligne-bouton .chevron{color:var(--gris); font-size:1.6rem; line-height:1;}
-.interrupteur{
-  appearance:none; -webkit-appearance:none; flex:none; width:54px; height:32px; margin:0; border-radius:980px; cursor:pointer;
-  background:var(--noir-3); position:relative; transition:background .2s;
-}
-.interrupteur::after{
-  content:''; position:absolute; top:4px; left:4px; width:24px; height:24px; border-radius:50%;
-  background:var(--gris); transition:transform .2s var(--spring), background .2s;
-}
-.interrupteur:checked{background:color-mix(in srgb, var(--bleu) 40%, var(--noir-3));}
-.interrupteur:checked::after{transform:translateX(22px); background:var(--bleu);}
-.interrupteur:focus-visible{outline:2px solid var(--bleu); outline-offset:2px;}
-.modal-actions.compact{margin-top:6px;}
-.modal-actions.col button{width:100%;}
+/* ---------- Boutons des feuilles : pilules ---------- */
+.modal-actions button, .btn-large, .rituel-nav button, .focus-secondaires button, .tri-delegue .btn-valider, .tri-fin .btn-valider,
+.sp-form .btn-valider, .verrou-btn{border-radius:999px; padding:15px 0; font-weight:700;}
+.btn-annuler{background:var(--remplissage); color:var(--encre);}
+:root[data-theme="clair"] .btn-annuler{color:var(--encre);}
 .btn-annuler.danger{color:var(--rouge);}
-.btn-large{width:100%; padding:14px 0; border:none; border-radius:980px; font-size:0.9rem; font-weight:600; cursor:pointer;}
-.zone-secours{margin-top:14px; padding-top:12px; border-top:1px solid var(--ligne);}
-.version-app{margin:14px 0 4px; text-align:center; font-size:0.76rem; color:var(--gris);}
-#overlayDonnees .theme-titre:first-of-type{margin-top:0;}
 
-/* ---------- Journal ---------- */
-.filtres-journal{margin:0 0 18px;}
-.journal-ligne{display:flex; align-items:center; gap:12px; padding:13px 16px; border-top:1px solid var(--ligne);}
-.journal-ligne:first-child{border-top:none;}
-.journal-ico{
-  flex:none; width:34px; height:34px; border-radius:50%; display:grid; place-items:center;
-  font-size:0.95rem; font-weight:800; color:var(--c); background:color-mix(in srgb, var(--c) 16%, transparent);
-}
-.journal-txt{flex:1; min-width:0;}
-.journal-titre{font-size:0.95rem; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-.journal-sous{font-size:0.76rem; color:var(--gris); margin-top:2px;}
-.journal-heure{flex:none; font-size:0.76rem; color:var(--gris);}
+/* ---------- Interrupteurs One UI : la piste prend la couleur choisie ---------- */
+.interrupteur, .mini-switch input{width:50px; height:28px; border-radius:999px; background:transparent; box-shadow:inset 0 0 0 2px var(--gris-3);}
+.interrupteur::after, .mini-switch input::after{top:5px; left:5px; width:18px; height:18px; background:var(--gris-3); box-shadow:none;}
+.interrupteur:checked, .mini-switch input:checked{background:var(--indigo); box-shadow:none;}
+.interrupteur:checked::after, .mini-switch input:checked::after{transform:translateX(22px); background:#fff;}
+.mini-switch input{width:44px; height:24px;}
+.mini-switch input::after{width:14px; height:14px;}
+.mini-switch input:checked::after{transform:translateX(20px);}
+.ligne-reglage{border-radius:22px; padding:16px 18px;}
 
-/* ---------- Tâches répétées ---------- */
-.rec-ligne{display:flex; align-items:center; gap:10px; padding:10px 14px 10px 6px; border-top:1px solid var(--ligne);}
-.rec-ligne:first-child{border-top:none;}
-.rec-corps{
-  flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; text-align:left; cursor:pointer;
-  background:none; border:none; padding:8px 10px; color:var(--texte); font:inherit;
-}
-.rec-titre{font-size:1rem; line-height:1.3; word-break:break-word;}
-.rec-meta{font-size:0.78rem; color:var(--gris);}
-.rec-meta.retard{color:var(--orange); font-weight:600;}
-.rec-ligne .pill-report{flex:none; background:color-mix(in srgb, var(--rouge) 14%, transparent); color:var(--rouge);}
-.aide-centre{text-align:center; margin-top:-8px;}
-
-/* ---------- Verrouillage par code PIN : l'appli est masquée tant que le code n'est pas saisi ---------- */
-.ecran-verrou{
-  position:fixed; inset:0; z-index:200; background:var(--noir);
-  display:none; align-items:center; justify-content:center; padding:24px;
-}
-.verrouille .ecran-verrou{display:flex;}
-.verrouille .wrap, .verrouille .overlay, .verrouille .toast, .verrouille .nav, .verrouille .fab{display:none !important;}
-.verrou-boite{width:100%; max-width:300px; text-align:center;}
-.verrou-icone{font-size:2.4rem; margin-bottom:8px;}
-.verrou-boite h2{margin:0 0 4px; font-size:1.3rem;}
-.verrou-boite .sub{color:var(--gris); font-size:0.88rem; margin-bottom:18px;}
-.verrou-boite input{
-  width:100%; background:var(--noir-3); border:none; color:var(--texte); text-align:center;
-  letter-spacing:0.5em; font-size:1.3rem; font-family:inherit;
-}
-.verrou-boite input:focus{outline:2px solid var(--bleu); outline-offset:1px;}
-.verrou-btn{width:100%; margin:14px 0 10px; padding:14px 0; border:none; border-radius:980px; font-size:0.95rem; font-weight:600; cursor:pointer;}
-
-/* ---------- Écrans larges (tablette, Galaxy Z Fold déplié) ---------- */
+/* ---------- Barre de navigation flottante avec pastille ---------- */
+.nav{left:50%; right:auto; transform:translateX(-50%); width:min(calc(100% - 24px), 480px);
+  bottom:calc(12px + env(safe-area-inset-bottom, 0px)); padding:6px; border:none; border-radius:34px;
+  background:rgba(var(--panneau), 0.9); -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%);
+  box-shadow:0 8px 28px rgba(0,0,0,0.3), 0 0 0 0.5px var(--separateur);}
+.nav-btn{position:relative; min-height:58px; padding:8px 4px; border-radius:28px; gap:3px; color:var(--gris-3); transition:color .2s;}
+.nav-btn.actif{color:var(--indigo-fonce); background:var(--indigo-teinte);}
+.nav-btn.actif::before{display:none;}
+.nav-txt{font-size:0.68rem; font-weight:700;}
+.nav-ico{width:24px; height:24px;}
+.nav-n{top:4px; right:calc(50% - 26px);}
+.fab{width:58px; height:58px; bottom:calc(90px + env(safe-area-inset-bottom, 0px)); right:max(20px, calc(50% - 270px));}
 @media(min-width:700px){
-  body{padding-left:24px; padding-right:24px;}
-  .nav{width:min(520px, 70vw);}
+  .nav{left:50%; right:auto; transform:translateX(-50%); width:min(480px, 70vw); border-radius:34px;}
 }
-@media(max-width:480px){
-  /* Place pour le titre : toucher la tâche suffit à la modifier, le crayon est masqué */
-  .tache .icone[data-act="edit"]{display:none;}
-  .tache{gap:8px; padding-left:14px;}
-  body{padding-left:14px; padding-right:14px;}
-  header h1{font-size:2.1rem;}
-  .resume{padding:22px 20px;}
-  .resume .valeur{font-size:2.6rem;}
-}
-@media(max-width:360px){
-  header h1{font-size:1.8rem;}
-  .nav-btn{font-size:0.58rem;}
-  .nav-ico{width:22px; height:22px;}
-}
+
+/* ---------- Toasts One UI : pilule sombre centrée ---------- */
+.toast{border-radius:999px; padding:13px 22px; bottom:calc(96px + env(safe-area-inset-bottom, 0px));
+  background:color-mix(in srgb, var(--carte-3) 92%, transparent); color:var(--encre);}
+
+/* ---------- Feuilles : grands arrondis ---------- */
+.modal{border-radius:30px 30px 0 0; padding:10px 20px calc(26px + env(safe-area-inset-bottom, 0px));}
+@media(min-width:640px){ .modal{border-radius:30px; padding:24px;} }
+.modal h3{font-size:1.4rem;}
+.sheet-grabber{width:40px; height:5px;}
+.couleurs{border-radius:var(--r-carte); padding:18px;}
+
+/* ---------- Écrans plein écran et accueil ---------- */
+.sp-logo{border-radius:26px;}
+.focus-actions .grand{border-radius:999px;}
+.etape{padding:10px 6px;}
