@@ -2,7 +2,7 @@
 // marge d'estimation, vibrations, ajout rapide, objectif, données, application.
 // Tout est mémorisé sur l'appareil (clé « todoTheme »). js/precoce.js (dans <head>) pose déjà le thème avant l'affichage.
 const THEME_CLE = 'todoTheme';
-const VERSION_APP = 'v35';
+const VERSION_APP = 'v36';
 const MARGES = [20, 30, 50];
 const heureValide = h => typeof h === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(h);
 // Couleurs système d'Apple (la valeur exacte, claire ou sombre, est dans css/ios.css) : [clé, nom, aperçu]
@@ -156,6 +156,23 @@ function fermerReglages(){ $('overlayReglages').classList.remove('actif'); }
     taches = taches.filter(t => !t.archive);
     sauvegarder(); rendre(); fermerReglages();
     toast('Tâches archivées effacées');
+  });
+
+  // Tout supprimer : confirmation, copie de secours (récupérable dans les Réglages) et « Annuler » immédiat
+  $('btnToutSupprimer').addEventListener('click', () => {
+    const n = taches.length;
+    if(!n){ toast('Aucune tâche à supprimer'); return; }
+    const actives = taches.filter(t => !t.fait && !t.archive).length;
+    if(!confirm(`Supprimer définitivement toutes les tâches ?\n\n${actives} à faire et ${n - actives} terminée(s), toutes listes confondues (jour, semaine, plus tard, capture).\n\nConseil : exporte d'abord une sauvegarde. Tu pourras annuler juste après, ou les récupérer depuis les Réglages.`)) return;
+    try{ localStorage.setItem(CLE_AVANT_IMPORT, JSON.stringify({ taches })); }catch(_){} // filet de sécurité
+    try{ localStorage.removeItem('todoFocus'); }catch(_){}
+    const avant = taches;
+    taches = [];
+    noter('suppr', `${n} tâche${n > 1 ? 's' : ''}`, 'tout supprimer');
+    sauvegarder(); rendre(); fermerReglages();
+    if(typeof majZoneSecours === 'function') majZoneSecours();
+    vibrer([20, 60, 20]);
+    toast('Toutes les tâches ont été supprimées', 'danger', { label:'Annuler', fn:()=>{ taches = avant; sauvegarder(); rendre(); toast('Tâches restaurées', 'succes'); } });
   });
 
   // Application
