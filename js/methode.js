@@ -84,8 +84,8 @@ function placesRestantes(taille, sauf, cible){
 const RE_VAGUE = /(^|\s)(g[ée]rer|s'occuper|s’occuper|voir pour|penser [àa]|regarder pour|truc)(\s|$)/i;
 function conseilTitre(titre){
   if(!titre.trim()) return '';
-  if(RE_VAGUE.test(titre)) return 'Mot vague : commence par un verbe d\'action précis (appeler, écrire, envoyer, payer…) et un résultat visible.';
-  if(titre.trim().split(/\s+/).length < 2) return 'Une bonne tâche = un verbe + un objet + un résultat. Ex. « Appeler M. Konan pour confirmer jeudi ».';
+  if(RE_VAGUE.test(titre)) return 'Mot vague : commence par un verbe d\'action (appeler, écrire, envoyer…).';
+  if(titre.trim().split(/\s+/).length < 2) return '';
   return '';
 }
 
@@ -94,22 +94,39 @@ const versionMinimale = () => localStorage.getItem('todoMinimal') === auj();
 function basculerMinimale(){
   try{ if(versionMinimale()) localStorage.removeItem('todoMinimal'); else localStorage.setItem('todoMinimal', auj()); }catch(_){}
   rendre();
-  toast(versionMinimale() ? 'Version minimale : 1 à 3 actions, et la journée est réussie' : 'Retour au plan complet');
+  toast(versionMinimale() ? 'Mode minimal : l\'essentiel seulement' : 'Plan complet');
 }
 
-// ---------- Une ligne de tâche ----------
+// ---------- Icônes (traits fins, façon SF Symbols) : remplacent le texte dans l'interface ----------
+const ICONES = {
+  horloge:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  cloche:'<path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 8 2.5 8h-17S6 15 6 9z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+  repet:'<path d="M17 2.5l3 3-3 3"/><path d="M4 11V9.5a4 4 0 0 1 4-4h12"/><path d="M7 21.5l-3-3 3-3"/><path d="M20 13v1.5a4 4 0 0 1-4 4H4"/>',
+  etapes:'<path d="M10 6h10M10 12h10M10 18h10"/><path d="M3.5 6l1.5 1.5L7.5 5M3.5 12l1.5 1.5L7.5 11M3.5 18l1.5 1.5L7.5 17"/>',
+  report:'<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3 4v4.5h4.5"/>',
+  calendrier:'<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  personne:'<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>',
+  lune:'<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/>',
+  etiquette:'<path d="M3 12V4.5A1.5 1.5 0 0 1 4.5 3H12l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.3"/>',
+  plume:'<path d="M20 4c-8 0-14 6-14 14v2"/><path d="M20 4c0 8-6 12-12 12"/>',
+  alerte:'<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.5v.5"/>',
+  chevron:'<path d="M9 5l7 7-7 7"/>'
+};
+const ic = (nom, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24" aria-hidden="true">${ICONES[nom]}</svg>`;
+
+// ---------- Une ligne de tâche : le titre, puis des icônes (pas de phrases) ----------
 function htmlLigne(t, action, focus){
   const sous = t.sous || [], nFaites = sous.filter(s => s.fait).length;
   const meta = [
     `<b class="prio prio-${t.priorite}" title="${LIB_PRIO[t.priorite]}">${t.priorite}</b>`,
-    t.duree ? `<span>${dureeTexte(t.duree)}${t.reel ? ` · réel ${dureeTexte(t.reel)}` : ''}</span>` : '<span class="sans-duree">sans durée</span>',
-    t.heure ? `<span>${t.heure.replace(':', ' h ')}</span>` : '',
-    t.liste !== 'jour' && t.date ? `<span>${echapper(libelleDate(t.date))}</span>` : '',
-    t.delegue ? `<span>suivi : ${echapper(t.delegue)}</span>` : '',
-    t.repeter ? `<span title="${LIBELLES_REPET[t.repeter]}">↻</span>` : '',
-    sous.length ? `<span>${nFaites}/${sous.length} étapes</span>` : '',
-    t.reports >= 3 && !t.fait ? `<span class="report3">reportée ${t.reports}×</span>` : (t.reports && !t.fait ? `<span>reportée ${t.reports}×</span>` : '')
-  ].filter(Boolean).join('<i class="sep"></i>');
+    t.duree ? `<span title="Durée estimée${t.reel ? ' · réel ' + dureeTexte(t.reel) : ''}">${ic('horloge')}${dureeTexte(t.duree)}</span>` : '',
+    t.heure ? `<span title="Heure prévue">${ic('cloche')}${t.heure.replace(':', ' h ')}</span>` : '',
+    t.liste !== 'jour' && t.date ? `<span>${ic('calendrier')}${echapper(libelleDate(t.date))}</span>` : '',
+    t.delegue ? `<span title="Confiée à ${echapper(t.delegue)}">${ic('personne')}${echapper(t.delegue)}</span>` : '',
+    t.repeter ? `<span title="${LIBELLES_REPET[t.repeter]}">${ic('repet')}</span>` : '',
+    sous.length ? `<span title="Étapes">${ic('etapes')}${nFaites}/${sous.length}</span>` : '',
+    t.reports && !t.fait ? `<span class="${t.reports >= 3 ? 'report3' : ''}" title="Reportée ${t.reports} fois">${ic('report')}${t.reports}</span>` : ''
+  ].filter(Boolean).join('');
   const bouton = action ? `<button class="pill-action" type="button" data-act="${action.act}">${action.label}</button>` : '';
   const btnFocus = focus && !t.fait ? `<button class="btn-focus" type="button" data-act="focus" aria-label="Mode Focus sur cette tâche">${SVG_PLAY}</button>` : '';
   return `<div class="tache ligne${t.fait ? ' fait' : ''}" data-id="${t.id}" data-d="${t.fait ? '↩ Rouvrir' : '✓ Terminer'}" data-g="Supprimer ✕">
@@ -119,8 +136,8 @@ function htmlLigne(t, action, focus){
   </div>`;
 }
 
-// ---------- Figures réutilisables : 1-3-5 et jauge 60/40 (aujourd'hui ou demain) ----------
-function htmlFigure135(p){
+// ---------- Figures réutilisables : 1-3-5 et charge de la journée (aujourd'hui ou demain) ----------
+function htmlFigure135(p, sansCarte){
   const { plan, horsPlan, cible } = p;
   const lignes = TAILLES.map((tl, k) => {
     const pl = plan[tl], cases = [];
@@ -128,41 +145,32 @@ function htmlFigure135(p){
     pl.afaire.forEach(() => cases.push('<i class="c prevu"></i>'));
     while(cases.length < PLACES[tl]) cases.push(`<button class="c libre" type="button" data-act="ajouter" data-taille="${tl}" data-date="${cible}" aria-label="Ajouter une tâche ${tl}"></button>`);
     const trop = horsPlan.filter(t => t.taille === tl).length;
-    return `<div class="f135-ligne" style="--i:${k}"><span class="f135-n">${PLACES[tl]}</span>
-      <span class="f135-lbl"><b>${LIB_TAILLE[tl].toLowerCase()}</b><small>${AIDE_TAILLE[tl]}</small></span>
-      <span class="f135-cases">${cases.join('')}${trop ? `<em class="trop">+${trop}</em>` : ''}</span></div>`;
+    return `<div class="f135-ligne" style="--i:${k}" title="${LIB_TAILLE[tl]} · ${AIDE_TAILLE[tl]}"><span class="f135-n">${PLACES[tl]}</span>
+      <span class="f135-cases">${cases.join('')}</span>${trop ? `<em class="trop">+${trop}</em>` : ''}</div>`;
   }).join('');
   const nDansPlan = TAILLES.reduce((s, tl) => s + plan[tl].faites.length + plan[tl].afaire.length, 0);
   const nFaites = TAILLES.reduce((s, tl) => s + plan[tl].faites.length, 0);
-  return `<section class="carte f135" aria-label="Règle 1-3-5">
-      <div class="carte-tete"><div class="micro">Règle 1-3-5</div><div class="compte"><b>${nFaites}</b>/${nDansPlan || 0} faites</div></div>
-      ${lignes}
-      ${horsPlan.length ? `<div class="loi">Au plus 9 tâches : ${horsPlan.length} hors plan. Si une tâche arrive, une autre sort.</div>` : ''}
-    </section>`;
+  const corps = `<div class="carte-tete"><div class="micro">1 · 3 · 5</div><div class="compte"><b>${nFaites}</b>/${nDansPlan || 0}</div></div>${lignes}`;
+  return sansCarte ? corps : `<section class="carte f135" aria-label="Règle 1-3-5">${corps}</section>`;
 }
-function htmlJauge(p){
+function htmlJauge(p, sansCarte){
   const { jour } = p;
   const { dispo, capacite } = capaciteJour();
   const prevu = jour.reduce((s, t) => s + dureePlanifiee(t), 0);
   const fait = jour.filter(t => t.fait).reduce((s, t) => s + dureePlanifiee(t), 0);
   const sansDuree = jour.filter(t => !t.fait && !t.duree).length;
-  const depasse = prevu > capacite, presque = !depasse && prevu > capacite * 0.9;
+  const depasse = prevu > capacite;
   const pc = v => Math.min(100, v / dispo * 100).toFixed(1);
-  const message = depasse ? `La liste dépasse 60 % de la journée de ${dureeTexte(prevu - capacite)}. Retire ou renvoie des tâches maintenant, pas à 17 h.`
-    : sansDuree ? `Parkinson : ${sansDuree} tâche${sansDuree > 1 ? 's' : ''} sans durée. Donne-leur une limite pour savoir si la journée tient.`
-    : presque ? 'Murphy : la journée est presque pleine. Garde un bloc tampon pour les imprévus.'
-    : `Il reste ${dureeTexte(capacite - prevu)} planifiables. Les 40 % restants absorbent les imprévus.`;
-  return `<section class="carte jauge${depasse ? ' depasse' : ''}" aria-label="Règle 60/40">
-      <div class="carte-tete"><div class="micro">Règle 60/40</div><div class="compte"><b>${dureeTexte(prevu)}</b> / ${dureeTexte(capacite)}</div></div>
-      <div class="jauge-horaires">${reglagesTheme.debut.replace(':', ' h ')} – ${reglagesTheme.fin.replace(':', ' h ')} · 60 % planifiables</div>
-      <div class="jauge-piste">
+  // Une seule information, et seulement si elle demande une action
+  const alerte = depasse ? `<div class="jauge-note alerte">${ic('alerte')}Trop chargé de ${dureeTexte(prevu - capacite)}</div>`
+    : sansDuree ? `<div class="jauge-note">${ic('horloge')}${sansDuree} sans durée</div>` : '';
+  const corps = `<div class="carte-tete"><div class="micro">Charge · 60 %</div><div class="compte"><b>${dureeTexte(prevu)}</b> / ${dureeTexte(capacite)}</div></div>
+      <div class="jauge-piste" title="Fait · prévu (marge ${reglagesTheme.marge} % incluse) · ligne = 60 % de la journée">
         <div class="jauge-prevu" style="width:${pc(prevu)}%"></div>
         <div class="jauge-fait" style="width:${pc(fait)}%"></div>
-        <div class="jauge-seuil" style="left:60%"><span>60 %</span></div>
-      </div>
-      <div class="jauge-leg"><span><i class="l-fait"></i>fait</span><span><i class="l-prevu"></i>prévu (marge ${reglagesTheme.marge} % incluse)</span><span><i class="l-libre"></i>imprévus</span></div>
-      <div class="loi${depasse ? ' alerte' : ''}">${message}</div>
-    </section>`;
+        <div class="jauge-seuil" style="left:60%"></div>
+      </div>${alerte}`;
+  return sansCarte ? corps : `<section class="carte jauge${depasse ? ' depasse' : ''}" aria-label="Charge de la journée">${corps}</section>`;
 }
 
 // ---------- Écran « Aujourd'hui » ----------
@@ -170,67 +178,61 @@ function htmlJourHaut(){
   const p = planDuJour();
   const { plan } = p;
   const g = plan.grande.faites[0] || plan.grande.afaire[0];
-  const h = new Date().getHours(), min = new Date().getHours() * 60 + new Date().getMinutes();
+  const h = new Date().getHours(), min = h * 60 + new Date().getMinutes();
   let bandeaux = '';
-  // Rituel du soir : à partir de la fin de journée, s'il n'est pas fait
   if(min >= minutes(reglagesTheme.fin) - 30 && localStorage.getItem('todoRituel') !== auj()){
-    bandeaux += `<button class="bandeau" type="button" data-act="rituel"><span class="micro"><i class="carre"></i>Rituel du soir · 10 min</span><b>Prépare demain maintenant : la première tâche sera déjà choisie.</b><span class="fleche">→</span></button>`;
+    bandeaux += `<button class="bandeau" type="button" data-act="rituel">${ic('lune')}<b>Préparer demain</b><span class="fleche">${ic('chevron')}</span></button>`;
   }
-  // Revue de la semaine : le dimanche
   if(new Date().getDay() === 0 && !revueFaite()){
-    bandeaux += `<button class="bandeau" type="button" data-act="revue"><span class="micro"><i class="carre"></i>Revue de la semaine · 30 min</span><b>Fixe 3 à 5 résultats pour la semaine qui vient.</b><span class="fleche">→</span></button>`;
+    bandeaux += `<button class="bandeau" type="button" data-act="revue">${ic('calendrier')}<b>Revue de la semaine</b><span class="fleche">${ic('chevron')}</span></button>`;
   }
   const theme = themeDuJour();
 
   let grenouille;
   if(g){
-    const meta = [`Priorité ${g.priorite}`, g.duree ? dureeTexte(g.duree) : 'sans durée', g.heure ? g.heure.replace(':', ' h ') : '', g.reel ? `réel ${dureeTexte(g.reel)}` : ''].filter(Boolean).join(' · ');
-    const conseil = !g.fait && h >= 12 ? '<div class="loi">Point de midi : la grenouille passe en premier après la pause.</div>'
-      : (!g.fait && g.reports >= 3 ? '<div class="loi">Reportée 3 fois : trop grosse ? Découpe-la en étapes.</div>' : '');
+    const meta = [g.duree ? `<span>${ic('horloge')}${dureeTexte(g.duree)}</span>` : '', g.heure ? `<span>${ic('cloche')}${g.heure.replace(':', ' h ')}</span>` : ''].join('');
     grenouille = `<section class="grenouille tache${g.fait ? ' fait' : ''}" data-id="${g.id}">
-      <div class="micro"><i class="carre"></i>${g.fait ? 'Grenouille mangée' : 'La grenouille · à faire en premier'}</div>
+      <div class="micro">${g.fait ? 'Grenouille mangée' : 'Grenouille'}</div>
       <div class="g-ligne">
         <button class="coche g-coche" type="button" data-act="toggle" aria-label="${g.fait ? 'Rouvrir' : 'Terminer la grenouille'}">${SVG_COCHE}</button>
-        <div class="tache-corps" data-act="edit"><div class="g-titre">${echapper(g.titre)}</div><div class="g-meta">${meta}</div></div>
-      </div>${conseil}
-      ${g.fait ? '' : `<button class="g-focus" type="button" data-act="focus">${SVG_PLAY}<span>Commencer · Focus</span></button>`}
+        <div class="tache-corps" data-act="edit"><div class="g-titre">${echapper(g.titre)}</div>${meta ? `<div class="g-meta">${meta}</div>` : ''}</div>
+      </div>
+      ${g.fait ? '' : `<button class="g-focus" type="button" data-act="focus">${SVG_PLAY}<span>Focus</span></button>`}
+      ${!g.fait && h >= 12 ? '<span class="g-badge">En premier après la pause</span>' : ''}
     </section>`;
   } else {
     grenouille = `<button class="grenouille vide-g" type="button" data-act="ajouter" data-taille="grande">
-      <div class="micro"><i class="carre"></i>La grenouille</div>
+      <div class="micro">Grenouille</div>
       <div class="g-titre">Choisis ta grande tâche</div>
-      <div class="g-meta">La plus importante — souvent la plus désagréable. Fais-la en premier, et la journée est gagnée.</div>
     </button>`;
   }
   const minimale = versionMinimale();
+  const depasse = p.jour.reduce((s, t) => s + dureePlanifiee(t), 0) > capaciteJour().capacite;
   return `${bandeaux}
-    ${theme ? `<div class="theme-jour"><span class="micro">Thème du jour</span><b>${echapper(theme)}</b></div>` : ''}
+    ${theme ? `<div class="theme-jour">${ic('etiquette')}<b>${echapper(theme)}</b></div>` : ''}
     ${grenouille}
-    ${minimale ? '' : htmlFigure135(p) + htmlJauge(p)}
-    <button class="lien-minimal${minimale ? ' actif' : ''}" type="button" data-act="minimal">${minimale ? '← Revenir au plan complet' : 'Journée difficile ? Passer en version minimale'}</button>`;
+    ${minimale ? '' : `<section class="carte journee${depasse ? ' depasse' : ''}">${htmlFigure135(p, true)}<div class="journee-sep"></div>${htmlJauge(p, true)}</section>`}
+    <button class="lien-minimal${minimale ? ' actif' : ''}" type="button" data-act="minimal">${ic('plume')}${minimale ? 'Plan complet' : 'Mode minimal'}</button>`;
 }
 
 function htmlJourListe(){
   const { plan, horsPlan, jour } = planDuJour();
   if(!jour.length){
-    return `<div class="vide"><b>Ta journée est vide</b>Commence par ta grenouille, puis 3 tâches moyennes et 5 petites. Rien de plus.</div>`;
+    return `<div class="vide"><b>Journée vide</b>1 grande, 3 moyennes, 5 petites.</div>`;
   }
   const section = (titre, liste, action, cls, focus) => liste.length ? `<section class="groupe ${cls || ''}"><div class="groupe-titre"><span>${titre}</span><span class="groupe-nb">${liste.length}</span></div>
     <div class="groupe-liste">${liste.map(t => htmlLigne(t, action, focus)).join('')}</div></section>` : '';
   const faitesAuj = jour.filter(t => t.fait && t.taille !== 'grande');
   if(versionMinimale()){
-    // Les 1 à 3 actions qui rendent la journée réussie malgré tout : priorité A d'abord
     const restantes = [...plan.moyenne.afaire, ...plan.petite.afaire, ...horsPlan].sort((a, b) => ORDRE_PRIO[a.priorite] - ORDRE_PRIO[b.priorite]);
     const essentiel = restantes.slice(0, plan.grande.afaire.length ? 2 : 3);
-    return `<p class="chapo">Version minimale : seulement l'essentiel. Le reste attend demain sans culpabilité.</p>`
-      + section('L\'essentiel', essentiel, null, '', true)
-      + (restantes.length > essentiel.length ? `<p class="aide">${restantes.length - essentiel.length} autre${restantes.length - essentiel.length > 1 ? 's' : ''} tâche${restantes.length - essentiel.length > 1 ? 's' : ''} en attente.</p>` : '')
-      + section('Fait aujourd\'hui', faitesAuj, null, 'faites-auj');
+    return section('L\'essentiel', essentiel, null, '', true)
+      + section('Fait', faitesAuj, null, 'faites-auj');
   }
-  return section('Tâches moyennes', plan.moyenne.afaire, null, '', true)
-    + section('Petites tâches', plan.petite.afaire, null, '', true)
-    + section('Hors plan · le 1-3-5 est plein', horsPlan, { act:'vers-semaine', label:'Semaine' }, 'hors-plan')
-    + section('Fait aujourd\'hui', faitesAuj, null, 'faites-auj');
+  return section('Moyennes', plan.moyenne.afaire, null, '', true)
+    + section('Petites', plan.petite.afaire, null, '', true)
+    + section('Hors plan', horsPlan, { act:'vers-semaine', label:'Semaine' }, 'hors-plan')
+    + section('Fait', faitesAuj, null, 'faites-auj');
 }
 
 // ---------- Liste « Semaine » (dans Planifier) : à venir et « plus tard » ----------
@@ -239,7 +241,7 @@ function htmlSemaine(){
   const semaine = actives.filter(t => t.liste === 'semaine').sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || (ORDRE_PRIO[a.priorite] - ORDRE_PRIO[b.priorite]));
   const plusTard = actives.filter(t => t.liste === 'plustard').sort((a, b) => (ORDRE_PRIO[a.priorite] - ORDRE_PRIO[b.priorite]) || (a.creeLe - b.creeLe));
   const versJour = { act:'vers-jour', label:'Aujourd\'hui' };
-  if(!semaine.length && !plusTard.length) return '<div class="vide"><b>Rien à venir</b>Les tâches datées des prochains jours, et celles « un jour, peut-être », apparaîtront ici.</div>';
+  if(!semaine.length && !plusTard.length) return '<div class="vide"><b>Rien à venir</b></div>';
   const jours = [...new Set(semaine.filter(t => t.date).map(t => t.date))].sort();
   const bloc = (titre, liste, action, cle) => {
     if(!liste.length) return '';

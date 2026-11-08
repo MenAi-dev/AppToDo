@@ -354,16 +354,15 @@ function majFiche(){
   const jourCible = liste === 'jour' ? auj() : (liste === 'semaine' && $('editDate').value) || '';
   if(jourCible){
     const reste = placesRestantes(taille, tacheEnEdition, jourCible);
-    $('editTailleInfo').textContent = reste > 0 ? `${reste} place${reste > 1 ? 's' : ''} libre${reste > 1 ? 's' : ''} sur ${PLACES[taille]} ${liste === 'jour' ? "aujourd'hui" : libelleDate(jourCible).toLowerCase()} · ${AIDE_TAILLE[taille]}`
-      : `Plus de place : ${PLACES[taille]} ${LIB_TAILLE[taille].toLowerCase()} max. Elle sera « hors plan » — envoie-la plutôt à la semaine.`;
+    $('editTailleInfo').textContent = reste > 0 ? `${reste}/${PLACES[taille]} libre${reste > 1 ? 's' : ''} · ${AIDE_TAILLE[taille]}` : 'Complet : elle sera hors plan';
     $('editTailleInfo').classList.toggle('alerte', reste <= 0);
-  } else { $('editTailleInfo').textContent = AIDE_TAILLE[taille]; $('editTailleInfo').classList.remove('alerte'); }
-  $('editPrioInfo').textContent = LIB_PRIO[valeurSeg('editPrio')] || '';
+  } else { $('editTailleInfo').textContent = ''; $('editTailleInfo').classList.remove('alerte'); }
+  $('editPrioInfo').textContent = '';
   // Durée : estimation + marge (Hofstadter), ou rappel de Parkinson
   const d = parseInt($('editDuree').value, 10);
   $('editDureeInfo').textContent = d > 0
-    ? `Planifiée avec la marge de ${reglagesTheme.marge} % : ${dureeTexte(dureePlanifiee({ duree:d }))}${taille === 'petite' && d > 30 ? ' · un peu long pour une petite tâche' : ''}${d > 120 ? ' · plus de 2 h : découpe-la en étapes' : ''}`
-    : 'Parkinson : sans limite, une tâche occupe tout le temps disponible. Donne-lui une durée.';
+    ? `≈ ${dureeTexte(dureePlanifiee({ duree:d }))} avec la marge${d > 120 ? ' · à découper' : ''}`
+    : '';
   document.querySelectorAll('#editDurees [data-min]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.min) === d)));
   majChampHeure();
 }
@@ -389,7 +388,7 @@ function ouvrirEdition(t, creation){
   dessinerSousEdition();
   $('editSousNouvelle').value = '';
   $('editReport').hidden = !(t.reports >= 3 && !t.fait);
-  $('editReport').textContent = `Reportée ${t.reports} fois. Est-elle vraiment importante ? Si oui, découpe-la en étapes ; sinon, range-la « plus tard » ou supprime-la.`;
+  $('editReport').textContent = `Reportée ${t.reports} fois : à découper, ranger ou supprimer.`;
   majFiche();
   $('overlayEdit').classList.add('actif');
   if(creation && !t.titre) setTimeout(()=>$('editTitre').focus(), 250);
@@ -412,7 +411,7 @@ function majChampHeure(){
   $('editHeure').disabled = !date;
   if(!date) $('editHeure').value = '';
   $('blocAvance').hidden = !$('editHeure').value;
-  $('aideRappel').textContent = $('editHeure').value ? aideNotification() : (!date ? 'Choisis un jour pour pouvoir fixer une heure.' : '');
+  $('aideRappel').textContent = '';
 }
 $('editHeure').addEventListener('input', majChampHeure);
 

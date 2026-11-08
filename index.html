@@ -53,7 +53,7 @@
 
   <form class="ajout" id="formAjout" autocomplete="off">
     <div class="ajout-ligne">
-      <input id="inputTitre" type="text" placeholder="Nouvelle tâche : un verbe, un objet, un résultat" maxlength="140" enterkeyhint="go" aria-label="Nouvelle tâche">
+      <input id="inputTitre" type="text" placeholder="Nouvelle tâche" maxlength="140" enterkeyhint="go" aria-label="Nouvelle tâche">
       <button type="submit" class="btn-plus" aria-label="Ajouter la tâche">+</button>
     </div>
     <div class="ajout-options">
@@ -72,7 +72,7 @@
 
   <section class="courbe" id="courbe" aria-label="Évolution des tâches terminées"></section>
 
-  <footer>L'art de planifier sa journée · données sur cet appareil</footer>
+  
 </div>
 
 <!-- Barre d'onglets -->
@@ -89,8 +89,8 @@
     <div class="fiche-tete"><span class="index index-fiche" id="editIndex">+</span><h3 id="editEntete">Nouvelle tâche</h3></div>
 
     <div class="champ">
-      <label for="editTitre">Tâche · verbe + objet + résultat</label>
-      <input id="editTitre" type="text" maxlength="140" placeholder="Ex. Appeler les 5 prospects du salon pour fixer un rendez-vous">
+      <label for="editTitre">Tâche</label>
+      <input id="editTitre" type="text" maxlength="140" placeholder="Verbe + objet + résultat">
       <div class="loi" id="editConseil"></div>
     </div>
 
@@ -101,11 +101,11 @@
         <button type="button" data-v="semaine" aria-pressed="false">Cette semaine</button>
         <button type="button" data-v="plustard" aria-pressed="false">Plus tard</button>
       </div>
-      <div id="champDate" hidden><input id="editDate" type="date" aria-label="Jour prévu (facultatif)"><div class="aide">Facultatif. Elle reviendra seule dans ta journée ce jour-là.</div></div>
+      <div id="champDate" hidden><input id="editDate" type="date" aria-label="Jour prévu (facultatif)"></div>
     </div>
 
     <div class="champ">
-      <label>Taille · règle 1-3-5</label>
+      <label>Taille</label>
       <div class="seg seg-3" id="editTaille" role="group" aria-label="Taille">
         <button type="button" data-v="grande" aria-pressed="false">Grande</button>
         <button type="button" data-v="moyenne" aria-pressed="false">Moyenne</button>
@@ -115,7 +115,7 @@
     </div>
 
     <div class="champ">
-      <label>Priorité · ABC</label>
+      <label>Priorité</label>
       <div class="seg seg-3 seg-prio" id="editPrio" role="group" aria-label="Priorité">
         <button type="button" data-v="A" aria-pressed="false">A</button>
         <button type="button" data-v="B" aria-pressed="true">B</button>
@@ -125,7 +125,7 @@
     </div>
 
     <div class="champ">
-      <label for="editDuree">Durée estimée</label>
+      <label for="editDuree">Durée</label>
       <div class="duree-ligne">
         <div class="puces-duree" id="editDurees">
           <button type="button" data-min="10">10</button><button type="button" data-min="15">15</button><button type="button" data-min="30">30</button>
@@ -137,7 +137,7 @@
     </div>
 
     <div class="champ" id="champHeure">
-      <label for="editHeure">Moment · rappel (facultatif)</label>
+      <label for="editHeure">Heure</label>
       <div class="rappel-ligne">
         <input id="editHeure" type="time" aria-label="Heure prévue">
         <div class="rappel-avance" id="blocAvance" hidden>
@@ -158,13 +158,13 @@
       </select>
     </div>
     <div class="champ">
-      <label for="editSousNouvelle">Étapes · si elle prend plus de 2 h, découpe-la</label>
+      <label for="editSousNouvelle">Étapes</label>
       <div class="sous-liste" id="editSous"></div>
-      <input id="editSousNouvelle" type="text" maxlength="140" placeholder="Ajouter une étape…" enterkeyhint="done" autocomplete="off">
+      <input id="editSousNouvelle" type="text" maxlength="140" placeholder="Ajouter une étape" enterkeyhint="done" autocomplete="off">
     </div>
     <div class="champ">
       <label for="editNote">Note</label>
-      <textarea id="editNote" rows="2" maxlength="1000" placeholder="Détails, adresse, lien…"></textarea>
+      <textarea id="editNote" rows="2" maxlength="1000" placeholder="Facultatif"></textarea>
     </div>
     <div class="loi alerte" id="editReport" hidden></div>
     <div class="modal-actions">

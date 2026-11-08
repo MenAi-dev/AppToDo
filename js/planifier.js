@@ -50,7 +50,7 @@ function htmlRituel(){
       ${etapeRituel > 1 ? '<button class="btn-annuler" type="button" data-rituel="prec">Précédent</button>' : '<span></span>'}
       ${etapeRituel < 5 ? '<button class="btn-valider" type="button" data-rituel="suiv">Suivant →</button>' : '<button class="btn-valider" type="button" data-rituel="fin">Terminer le rituel</button>'}
     </div>`;
-  return `${fait ? '<div class="loi">Rituel fait ce soir : demain est prêt. Tu peux encore ajuster.</div>' : '<p class="chapo">Le soir, tu choisis selon l\'importance, pas selon l\'envie du moment (loi de Laborit). Le matin commence sans hésitation.</p>'}
+  return `${fait ? '<div class="loi">Demain est prêt.</div>' : ''}
     <div class="etapes">${progres}</div>
     <section class="rituel-etape">${[null, rituel1, rituel2, rituel3, rituel4, rituel5][etapeRituel]()}</section>${nav}`;
 }
@@ -61,7 +61,7 @@ function rituel1(){
   const b = lireJSON('todoBilans', {})[auj()] || {};
   const q = [['bien', 'Qu\'est-ce qui a bien fonctionné aujourd\'hui ?'], ['perdu', 'Qu\'est-ce qui m\'a fait perdre du temps ?'], ['change', 'Qu\'est-ce que je change demain ?']];
   return `<h2 class="etape-titre"><span class="index">01</span>Relire ce qui est fait</h2>
-    <div class="grand-compte"><b>${faites.length}</b><span>tâche${faites.length > 1 ? 's' : ''} terminée${faites.length > 1 ? 's' : ''} aujourd'hui. Prends un instant pour le constater.</span></div>
+    <div class="grand-compte"><b>${faites.length}</b><span>terminée${faites.length > 1 ? 's' : ''} aujourd'hui</span></div>
     ${faites.length ? `<div class="groupe-liste">${faites.slice(0, 9).map(t => htmlLigne(t)).join('')}</div>` : ''}
     <div class="bilan-q">${q.map(([k, l]) => `<label class="champ"><span>${l}</span><textarea rows="2" data-bilan="${k}">${echapper(b[k] || '')}</textarea></label>`).join('')}</div>`;
 }
@@ -70,9 +70,8 @@ function rituel1(){
 const sortsReport = {}; // id → 'demain' | 'plustard' | 'suppr'
 function rituel2(){
   const restantes = taches.filter(t => !t.archive && !t.fait && t.liste === 'jour');
-  if(!restantes.length) return `<h2 class="etape-titre"><span class="index">02</span>Reporter ce qui reste</h2><div class="vide"><b>Rien à reporter</b>Toute la liste du jour est faite. Bravo.</div>`;
+  if(!restantes.length) return `<h2 class="etape-titre"><span class="index">02</span>Reporter ce qui reste</h2><div class="vide"><b>Rien à reporter</b></div>`;
   return `<h2 class="etape-titre"><span class="index">02</span>Reporter ce qui reste</h2>
-    <p class="aide">Pour chaque tâche : demain, plus tard ou supprimer. Reportée 3 fois ? Elle est sans doute trop grosse ou pas si importante.</p>
     <div class="reports">${restantes.map(t => {
       const s = sortsReport[t.id] || (t.reports >= 2 ? 'plustard' : 'demain');
       sortsReport[t.id] = s;
@@ -105,7 +104,7 @@ function rituel3(){
     <blockquote class="citation">Quelle est la seule chose que je peux faire demain qui rendra le reste plus facile ou inutile ?</blockquote>
     ${candidats.length ? `<div class="choix">${candidats.map(t => `<button type="button" class="choix-ligne${actuelle && actuelle.id === t.id ? ' actif' : ''}" data-grenouille="${t.id}">
         <span class="choix-rond"></span><span><b>${echapper(t.titre)}</b><small>${t.liste === 'semaine' && t.date === demain ? 'prévue demain' : t.liste === 'plustard' ? 'plus tard · priorité A' : 'semaine'}${t.duree ? ' · ' + dureeTexte(t.duree) : ''}</small></span></button>`).join('')}</div>` : ''}
-    <button class="voir-plus" type="button" data-act="ajouter" data-taille="grande" data-date="${demain}">+ Nouvelle grande tâche pour demain</button>`;
+    <button class="voir-plus" type="button" data-act="ajouter" data-taille="grande" data-date="${demain}">+ Nouvelle grande tâche</button>`;
 }
 function choisirGrenouille(id){
   const demain = demainISO();
@@ -125,7 +124,7 @@ function rituel4(){
   return `<h2 class="etape-titre"><span class="index">04</span>Écrire la liste de demain</h2>
     ${htmlFigure135(p)}
     <form class="capture-form" id="formDemain" autocomplete="off">
-      <input id="inputDemain" type="text" maxlength="140" placeholder="Ajouter pour demain : verbe + objet + résultat" enterkeyhint="send">
+      <input id="inputDemain" type="text" maxlength="140" placeholder="Ajouter pour demain" enterkeyhint="send">
       <button type="submit" class="btn-plus" aria-label="Ajouter">+</button>
     </form>
     ${lignes.length ? `<div class="groupe-liste">${lignes.map(t => htmlLigne(t)).join('')}</div>` : ''}
@@ -138,7 +137,7 @@ function rituel5(){
   const liste = coches.jour === auj() ? coches.c || [] : [];
   const items = ['Préparer le matériel du matin', 'Ranger son espace de travail', 'Relire la liste de demain avant d\'ouvrir les messages', 'Mettre le téléphone en silencieux pour le premier bloc'];
   return `<h2 class="etape-titre"><span class="index">05</span>Fermer la journée</h2>
-    <label class="champ"><span>Idées qui traînent (une par ligne) → elles vont dans la capture</span><textarea id="ideesSoir" rows="3" placeholder="Une idée par ligne…"></textarea></label>
+    <label class="champ"><span>Idées qui traînent</span><textarea id="ideesSoir" rows="3" placeholder="Une idée par ligne…"></textarea></label>
     <div class="checklist">${items.map((x, i) => `<label class="check"><input type="checkbox" data-check="${i}" ${liste[i] ? 'checked' : ''}><span>${x}</span></label>`).join('')}</div>`;
 }
 
@@ -162,14 +161,13 @@ function htmlBlocs(){
       <button type="button" class="bloc-x" data-retirer="${t.id}" aria-label="Retirer de l'agenda">✕</button></div>`;
   }).join('');
   const total = places.reduce((s, t) => s + (dureePlanifiee(t) || 30), 0), { capacite } = capaciteJour();
-  return `<p class="chapo">Un bloc = un type de tâche. La grande tâche dans le premier bloc, les messages groupés, un bloc tampon pour les imprévus.</p>
-    ${aPlacer.length ? `<div class="micro">À placer · touche une tâche puis un horaire</div>
+  return `${aPlacer.length ? `<div class="micro">À placer</div>
       <div class="a-placer">${aPlacer.map(t => `<button type="button" class="puce-tache${blocChoisi === t.id ? ' choisi' : ''}${t.taille === 'grande' ? ' grande' : ''}" data-choisir="${t.id}">${echapper(t.titre)}<small>${t.duree ? dureeTexte(dureePlanifiee(t)) : '30 min'}</small></button>`).join('')}</div>`
-      : '<div class="loi">Toutes les tâches du plan ont un horaire. Glisse un bloc pour le déplacer.</div>'}
+      : ''}
     <div class="timeline${blocChoisi ? ' en-choix' : ''}" id="timeline" style="height:${H}px" data-d0="${d0}">
       ${bandes}${heures}${now > d0 && now < d1 ? `<div class="maintenant" style="top:${y(now)}px"></div>` : ''}${blocs}
     </div>
-    <div class="loi${total > capacite ? ' alerte' : ''}">${dureeTexte(total)} placés sur ${dureeTexte(capacite)} planifiables. ${total > capacite ? 'Trop chargé : retire un bloc.' : 'Laisse le reste libre pour les imprévus (loi de Murphy).'}</div>`;
+    ${total > capacite ? `<div class="loi alerte">Trop chargé : ${dureeTexte(total)} placés sur ${dureeTexte(capacite)}</div>` : ''}`;
 }
 function placerBloc(id, minute){
   const t = taches.find(x => x.id === id);
@@ -189,17 +187,17 @@ function htmlPlanSemaine(){
   const revue = d.revue[cle] || [];
   const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'], ajd = (new Date().getDay() + 6) % 7;
   return `<section class="carte">
-      <div class="carte-tete"><div class="micro">Résultats de la semaine</div><div class="compte"><b>${objectifs.filter(o => o.fait).length}</b>/${objectifs.length || 0}</div></div>
+      <div class="carte-tete"><div class="micro">Objectifs</div><div class="compte"><b>${objectifs.filter(o => o.fait).length}</b>/${objectifs.length || 0}</div></div>
       ${objectifs.map(o => `<label class="check objectif-sem"><input type="checkbox" data-objectif="${o.id}" ${o.fait ? 'checked' : ''}><span>${echapper(o.titre)}</span><button type="button" class="capture-x" data-objsuppr="${o.id}" aria-label="Retirer">✕</button></label>`).join('')}
-      ${objectifs.length < 5 ? `<form class="capture-form fin" id="formObjectif" autocomplete="off"><input id="inputObjectif" maxlength="100" placeholder="${objectifs.length < 3 ? 'Ajouter un résultat (3 à 5) : ex. 40 prospects contactés' : 'Un dernier résultat ?'}"><button class="btn-plus" type="submit" aria-label="Ajouter">+</button></form>` : '<div class="loi">5 résultats : c\'est le maximum. Concentre-toi.</div>'}
+      ${objectifs.length < 5 ? `<form class="capture-form fin" id="formObjectif" autocomplete="off"><input id="inputObjectif" maxlength="100" placeholder="Ajouter un objectif"><button class="btn-plus" type="submit" aria-label="Ajouter">+</button></form>` : ''}
     </section>
     <section class="carte">
-      <div class="carte-tete"><div class="micro">Thèmes de jours</div>
-        <label class="mini-switch"><input type="checkbox" id="themesActifs" ${d.themesActifs ? 'checked' : ''}><span>${d.themesActifs ? 'activés' : 'désactivés'}</span></label></div>
+      <div class="carte-tete"><div class="micro">Thèmes</div>
+        <label class="mini-switch"><input type="checkbox" id="themesActifs" ${d.themesActifs ? 'checked' : ''}><span></span></label></div>
       <div class="themes${d.themesActifs ? '' : ' off'}">${jours.map((j, i) => `<label class="theme-ligne${i === ajd ? ' auj' : ''}"><span>${j}</span><input data-theme-jour="${i}" maxlength="40" value="${echapper(d.themes[i])}"></label>`).join('')}</div>
     </section>
     <section class="carte">
-      <div class="carte-tete"><div class="micro">Revue hebdomadaire · 30 min</div><div class="compte"><b>${revue.filter(Boolean).length}</b>/${REVUE.length}</div></div>
+      <div class="carte-tete"><div class="micro">Revue</div><div class="compte"><b>${revue.filter(Boolean).length}</b>/${REVUE.length}</div></div>
       ${REVUE.map((x, i) => `<label class="check"><input type="checkbox" data-revue="${i}" ${revue[i] ? 'checked' : ''}><span>${x}</span></label>`).join('')}
     </section>
     ${htmlSemaine()}`;

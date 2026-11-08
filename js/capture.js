@@ -20,16 +20,14 @@ function htmlCapture(){
   const lignes = items.map(t => `<div class="capture-ligne" data-id="${t.id}">
       <span class="capture-puce"></span><span class="capture-titre">${echapper(t.titre)}</span>
       <button class="capture-x" type="button" data-act="suppr-capture" aria-label="Supprimer">✕</button></div>`).join('');
-  return `<p class="chapo">Écris tout ce qui te passe par la tête : tâches, idées, rappels, inquiétudes. Ne trie pas encore.</p>
-    <form class="capture-form" id="formCapture" autocomplete="off">
-      <input id="inputCapture" type="text" maxlength="140" placeholder="Une idée… puis Entrée" enterkeyhint="send" aria-label="Noter une idée">
+  return `<form class="capture-form" id="formCapture" autocomplete="off">
+      <input id="inputCapture" type="text" maxlength="140" placeholder="Une idée…" enterkeyhint="send" aria-label="Noter une idée">
       <button type="submit" class="btn-plus" aria-label="Noter">+</button>
     </form>
-    <div class="loi">Zeigarnik : une tâche non notée continue de tourner dans la tête. Ce qui est écrit n'a plus besoin d'être retenu.</div>
     ${items.length ? `
-      <button class="btn-tri" type="button" data-act="trier"><span class="btn-tri-n">${items.length}</span><span><b>Trier la capture</b><small>Supprimer · Faire · Planifier · Déléguer</small></span><span class="fleche">→</span></button>
-      <section class="groupe"><div class="groupe-titre"><span>Dans la capture</span><span class="groupe-nb">${items.length}</span></div><div class="groupe-liste capture-liste">${lignes}</div></section>`
-      : `<div class="vide"><b>Tête vide, esprit libre</b>Note ici tout ce qui te traverse l'esprit, puis trie-le en une fois.</div>`}`;
+      <button class="btn-tri" type="button" data-act="trier"><span class="btn-tri-n">${items.length}</span><span><b>Trier</b></span><span class="fleche">→</span></button>
+      <section class="groupe"><div class="groupe-titre"><span>À trier</span><span class="groupe-nb">${items.length}</span></div><div class="groupe-liste capture-liste">${lignes}</div></section>`
+      : `<div class="vide"><b>Tête vide</b>Note tout ce qui te passe par la tête.</div>`}`;
 }
 
 // ---------- Le tri : une carte à la fois ----------
@@ -54,7 +52,7 @@ function dessinerCarteTri(){
   $('triBarre').style.width = tri ? (tri.i / tri.file.length * 100) + '%' : '0';
   $('triAnnuler').hidden = !(tri && tri.hist.length);
   if(!t){
-    zone.innerHTML = `<div class="tri-fin"><div class="index">✓</div><b>Capture triée</b><p>Tout a trouvé sa place. L'esprit est libre.</p>
+    zone.innerHTML = `<div class="tri-fin"><div class="index">✓</div><b>Capture triée</b><p>Tout a trouvé sa place.</p>
       <button class="btn-valider" type="button" data-tri="fermer">Terminé</button></div>`;
     $('triActions').hidden = true;
     return;
@@ -62,11 +60,11 @@ function dessinerCarteTri(){
   $('triActions').hidden = false;
   $('triDelegue').hidden = true;
   zone.innerHTML = `<div class="tri-carte" id="triCarte">
-      <div class="micro"><i class="carre"></i>Qu'est-ce que j'en fais ?</div>
+      
       <div class="tri-titre">${echapper(t.titre)}</div>
       <div class="tri-indice g">Supprimer</div><div class="tri-indice d">Aujourd'hui</div><div class="tri-indice h">Plus tard</div>
     </div>
-    <p class="tri-aide">Glisse ← supprimer · → aujourd'hui · ↑ plus tard</p>`;
+    <p class="tri-aide">← supprimer · → aujourd'hui · ↑ plus tard</p>`;
   const c = $('triCarte'); c.classList.add('entre');
 }
 
